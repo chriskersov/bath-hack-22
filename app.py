@@ -154,13 +154,19 @@ def api_status():
 def start():
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
 
-@app.route("/PLACEHOLDER/Gameshow/", methods = ["POST"])
-def showtime():
+# @app.route("/Gameshow", methods = ["POST"])
+# def showtime():
 
-    questions = request.form['counter_value']
-    presenter = request.form['selected_option']
+#     questions = request.form['counter_value']
+#     presenter = request.form['selected_option']
 
-    return render_template(MAIN_PAGE)
+#     return render_template(index.html)
+
+@app.route("/gameshow", methods = ["GET"])
+def index():
+
+    return render_template("index.html")
+
 
 @app.route("/PLACEHOLDER/Finale/", methods = ["GET"])
 def victory():
