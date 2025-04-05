@@ -3,261 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <title>Lecture Quiz Game</title>
-  <style>
-    :root {
-      --baby-blue: #A2D2FF;
-      --baby-blue-light: #CEE5FF;
-      --baby-blue-dark: #84B4E3;
-      --white: #FFFFFF;
-      --text-dark: #333333;
-      --text-light: #555555;
-      --success: #4CAF50;
-      --error: #FF6B6B;
-    }
-    
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 800px; 
-      margin: 0 auto; 
-      padding: 20px; 
-      line-height: 1.6;
-      background-color: var(--white);
-      color: var(--text-dark);
-    }
-    
-    .app-container {
-      border-radius: 12px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-      overflow: hidden;
-      border: 1px solid var(--baby-blue-light);
-    }
-    
-    .app-header {
-      background-color: var(--baby-blue);
-      color: var(--white);
-      padding: 20px 30px;
-      text-align: center;
-      position: relative;
-    }
-    
-    .app-header h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 600;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    }
-    
-    .progress-container {
-      background-color: var(--baby-blue-light);
-      height: 10px;
-      width: 100%;
-      border-radius: 5px;
-      margin: 15px 0;
-      overflow: hidden;
-    }
-    
-    .progress-bar {
-      height: 100%;
-      background-color: var(--baby-blue-dark);
-      transition: width 0.3s ease;
-    }
-    
-    .question-card { 
-      margin-bottom: 20px; 
-      padding: 30px; 
-      background-color: var(--white);
-      transition: all 0.3s ease;
-    }
-    
-    .question-card .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    
-    .question-text {
-      font-size: 20px;
-      margin-bottom: 25px;
-      color: var(--text-dark);
-      font-weight: 500;
-    }
-    
-    .expected-answer {
-      color: var(--text-light);
-      font-style: italic;
-    }
-    
-    .controls { 
-      margin: 20px 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    button { 
-      padding: 12px 20px; 
-      font-size: 16px; 
-      font-weight: 500;
-      background-color: var(--baby-blue);
-      color: var(--white);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    button:hover { 
-      background-color: var(--baby-blue-dark);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-    }
-    
-    button:active {
-      transform: translateY(0);
-    }
-    
-    button:disabled { 
-      background-color: #dddddd; 
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
-    }
-    
-    .record-btn {
-      background-color: #FF8FAB;
-    }
-    
-    .record-btn:hover {
-      background-color: #FF7096;
-    }
-    
-    .stop-btn {
-      background-color: #FFC2D1;
-    }
-    
-    .grade-btn {
-      background-color: var(--baby-blue-dark);
-    }
-    
-    .next-btn {
-      background-color: var(--success);
-      display: block;
-      margin-top: 20px;
-      width: 100%;
-    }
-    
-    .record-status, .grade-status { 
-      margin-left: 10px; 
-      font-style: italic; 
-      color: var(--text-light);
-    }
-    
-    .user-answer {
-      background-color: var(--baby-blue-light);
-      padding: 15px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      margin: 15px 0;
-      font-family: inherit;
-      color: var(--text-dark);
-    }
-    
-    #summary-container {
-      display: none;
-      padding: 30px;
-    }
-    
-    .summary-item {
-      background-color: var(--baby-blue-light);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-    }
-    
-    .correct {
-      color: var(--success);
-      font-weight: 600;
-    }
-    
-    .incorrect {
-      color: var(--error);
-      font-weight: 600;
-    }
-    
-    #overall-score {
-      background-color: var(--baby-blue);
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 20px;
-      text-align: center;
-      color: var(--white);
-    }
-    
-    #overall-score h3 {
-      font-size: 24px;
-      margin: 0 0 10px 0;
-    }
-    
-    .loading-container {
-      text-align: center;
-      padding: 40px;
-    }
-    
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid var(--baby-blue-light);
-      border-top: 5px solid var(--baby-blue-dark);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px auto;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
-      
-      .question-card {
-        padding: 20px;
-      }
-      
-      .question-text {
-        font-size: 18px;
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'baby-blue': '#A2D2FF',
+            'baby-blue-light': '#CEE5FF',
+            'baby-blue-dark': '#84B4E3',
+            'success': '#4CAF50',
+            'error': '#FF6B6B',
+          }
+        }
       }
     }
-  </style>
+  </script>
 </head>
-<body>
-  <div class="app-container">
-    <div class="app-header">
-      <h1>Lecture Quiz Game</h1>
-      <div id="progress-container" class="progress-container">
-        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+<body class="font-sans text-gray-800 max-w-3xl mx-auto p-5 leading-relaxed bg-white">
+  <div class="rounded-xl shadow-lg overflow-hidden border border-baby-blue-light">
+    <div class="bg-baby-blue text-white p-5 text-center relative">
+      <h1 class="m-0 text-2xl font-semibold">Lecture Quiz Game</h1>
+      <div id="progress-container" class="bg-baby-blue-light h-2.5 w-full rounded mt-4 mb-4 overflow-hidden">
+        <div id="progress-bar" class="h-full bg-baby-blue-dark transition-all duration-300 ease-in-out" style="width: 0%"></div>
       </div>
-      <span id="progress-text"></span>
+      <span id="progress-text" class="text-sm"></span>
     </div>
     
     <div id="question-container">
-      <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p id="no-questions">Waiting for lecture questions...</p>
+      <div class="text-center p-10">
+        <div class="w-12 h-12 border-4 border-baby-blue-light border-t-baby-blue-dark rounded-full animate-spin mx-auto mb-5"></div>
+        <p id="no-questions" class="mb-2">Waiting for lecture questions...</p>
         <p>Process your lecture captions to start the quiz.</p>
       </div>
     </div>
     
-    <div id="summary-container">
-      <h2>Quiz Summary</h2>
+    <div id="summary-container" class="p-6 hidden">
+      <h2 class="text-xl font-bold mb-4">Quiz Summary</h2>
       <div id="summary-content"></div>
-      <div id="overall-score"></div>
-      <button id="restart-btn">Play Again</button>
+      <div id="overall-score" class="bg-baby-blue p-5 rounded-lg mt-5 text-center text-white"></div>
+      <button id="restart-btn" class="mt-4 w-full bg-baby-blue text-white py-3 px-5 text-lg font-medium rounded-lg hover:bg-baby-blue-dark transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0">Play Again</button>
     </div>
   </div>
   
@@ -269,35 +54,35 @@
     
     function createQuestionHTML(q, index) {
       return `
-      <div class="question-card" data-index="${index}">
-        <div class="header">
-          <h2>Question ${index + 1}</h2>
-          <p><strong>Progress:</strong> Question ${index + 1} of ${questions.length}</p>
+      <div class="p-6 mb-5 bg-white transition-all duration-300 ease-in-out" data-index="${index}">
+        <div class="flex justify-between items-center mb-5">
+          <h2 class="text-xl font-medium">Question ${index + 1}</h2>
+          <p class="font-medium">Progress: Question ${index + 1} of ${questions.length}</p>
         </div>
-        <p class="question-text">${q.question}</p>
-        <p><strong>Expected Answer (for testing):</strong> <span class="expected-answer">${q.answer}</span></p>
-        <div class="controls">
-          <button class="record-btn" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>
+        <p class="text-lg mb-6 text-gray-800 font-medium">${q.question}</p>
+        <p class="mb-4"><span class="font-bold">Expected Answer (for testing):</span> <span class="text-gray-600 italic">${q.answer}</span></p>
+        <div class="flex items-center gap-3 my-5">
+          <button class="px-4 py-3 text-base font-medium bg-pink-300 text-white rounded-lg shadow-md hover:bg-pink-400 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center gap-2" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="6"></circle>
             </svg>
             Record Answer
           </button>
-          <button class="stop-btn" id="stop-btn" disabled>
+          <button class="px-4 py-3 text-base font-medium bg-pink-200 text-white rounded-lg shadow-md hover:bg-pink-300 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center gap-2" id="stop-btn" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="6" y="6" width="12" height="12"></rect>
             </svg>
             Stop
           </button>
-          <span class="record-status" id="record-status"></span>
+          <span class="ml-2 italic text-gray-600" id="record-status"></span>
         </div>
-        <p><strong>Your Answer:</strong></p>
-        <div class="user-answer" id="user-answer">${userAnswers[index] || ""}</div>
-        <div class="grade-container">
-          <button class="grade-btn" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
-          <p class="grade-status" id="grade-status">${grades[index] || ""}</p>
+        <p class="font-bold mb-2">Your Answer:</p>
+        <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap font-inherit text-gray-800 mb-4" id="user-answer">${userAnswers[index] || ""}</div>
+        <div>
+          <button class="px-4 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg shadow-md hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
+          <p class="mt-2 italic text-gray-600" id="grade-status">${grades[index] || ""}</p>
         </div>
-        <button class="next-btn" id="next-btn" style="display: none;">Next Question</button>
+        <button class="hidden w-full mt-5 px-4 py-3 text-base font-medium bg-success text-white rounded-lg shadow-md hover:bg-green-600 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 active:translate-y-0" id="next-btn">Next Question</button>
       </div>
       `;
     }
@@ -361,14 +146,16 @@
             recordStatus.textContent = "Recording...";
             recordBtn.disabled = true;
             stopBtn.disabled = false;
-            recordBtn.style.backgroundColor = "#ff4757";
+            recordBtn.classList.add("bg-red-500");
+            recordBtn.classList.remove("bg-pink-300");
           };
           
           mediaRecorder.onstop = async () => {
             stream.getTracks().forEach(track => track.stop());
             stopBtn.disabled = true;
             recordStatus.textContent = "Processing audio...";
-            recordBtn.style.backgroundColor = "";
+            recordBtn.classList.remove("bg-red-500");
+            recordBtn.classList.add("bg-pink-300");
             const audioBlob = new Blob(audioChunks, { type: chosenType });
             let extension = 'webm';
             if (chosenType.includes('ogg')) {
@@ -425,17 +212,18 @@
             grades[currentQuestionIndex] = gradeText;
             
             if (/\bINCORRECT\b/i.test(gradeText)) {
-              gradeStatus.innerHTML = `<span class="incorrect">✗</span> ${gradeText}`;
-              userAnswerEl.style.backgroundColor = "rgba(255, 107, 107, 0.1)";
-              userAnswerEl.style.borderLeft = "4px solid #FF6B6B";
+              gradeStatus.innerHTML = `<span class="font-semibold text-error">✗</span> ${gradeText}`;
+              userAnswerEl.classList.remove("bg-baby-blue-light");
+              userAnswerEl.classList.add("bg-red-50", "border-l-4", "border-error");
             } else if (/\bCORRECT\b/i.test(gradeText)) {
-              gradeStatus.innerHTML = `<span class="correct">✓</span> ${gradeText}`;
-              userAnswerEl.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
-              userAnswerEl.style.borderLeft = "4px solid #4CAF50";
+              gradeStatus.innerHTML = `<span class="font-semibold text-success">✓</span> ${gradeText}`;
+              userAnswerEl.classList.remove("bg-baby-blue-light");
+              userAnswerEl.classList.add("bg-green-50", "border-l-4", "border-success");
             } else {
               gradeStatus.textContent = gradeText;
             }
-            nextBtn.style.display = "block";
+            nextBtn.classList.remove("hidden");
+            nextBtn.classList.add("block");
           } else {
             gradeStatus.textContent = "Error grading answer.";
           }
@@ -482,12 +270,12 @@
         }
         
         summaryHTML += `
-          <div class="summary-item">
-            <h3>Question ${index + 1}</h3>
-            <p><strong>Question:</strong> ${q.question}</p>
-            <p><strong>Expected Answer:</strong> ${q.answer}</p>
-            <p><strong>Your Answer:</strong> ${userAnswers[index] || "No answer provided"}</p>
-            <p><strong>Result:</strong> <span class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
+          <div class="bg-baby-blue-light p-5 rounded-lg mb-4">
+            <h3 class="text-lg font-semibold mb-2">Question ${index + 1}</h3>
+            <p class="mb-2"><span class="font-bold">Question:</span> ${q.question}</p>
+            <p class="mb-2"><span class="font-bold">Expected Answer:</span> ${q.answer}</p>
+            <p class="mb-2"><span class="font-bold">Your Answer:</span> ${userAnswers[index] || "No answer provided"}</p>
+            <p><span class="font-bold">Result:</span> <span class="${isCorrect ? "text-success font-semibold" : "text-error font-semibold"}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
           </div>
         `;
       });
@@ -498,11 +286,12 @@
       const score = Math.round((correctCount / totalQuestions) * 100);
       
       overallScoreEl.innerHTML = `
-        <h3>Your Score: ${score}%</h3>
+        <h3 class="text-xl font-semibold mb-2">Your Score: ${score}%</h3>
         <p>Correct: ${correctCount} | Incorrect: ${incorrectCount}</p>
       `;
       
-      summaryContainer.style.display = "block";
+      summaryContainer.classList.remove("hidden");
+      summaryContainer.classList.add("block");
       document.getElementById("progress-bar").style.width = "100%";
       document.getElementById("progress-text").textContent = "Quiz Complete!";
       
