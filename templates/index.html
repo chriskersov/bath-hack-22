@@ -4,62 +4,262 @@
   <meta charset="UTF-8">
   <title>Lecture Quiz Game</title>
   <style>
+    :root {
+      --baby-blue: #A2D2FF;
+      --baby-blue-light: #CEE5FF;
+      --baby-blue-dark: #84B4E3;
+      --white: #FFFFFF;
+      --text-dark: #333333;
+      --text-light: #555555;
+      --success: #4CAF50;
+      --error: #FF6B6B;
+    }
+    
     body { 
-      font-family: Arial, sans-serif; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       max-width: 800px; 
       margin: 0 auto; 
       padding: 20px; 
       line-height: 1.6;
+      background-color: var(--white);
+      color: var(--text-dark);
     }
+    
+    .app-container {
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid var(--baby-blue-light);
+    }
+    
+    .app-header {
+      background-color: var(--baby-blue);
+      color: var(--white);
+      padding: 20px 30px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .app-header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .progress-container {
+      background-color: var(--baby-blue-light);
+      height: 10px;
+      width: 100%;
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: var(--baby-blue-dark);
+      transition: width 0.3s ease;
+    }
+    
     .question-card { 
-      margin-bottom: 20px; 
-      padding: 20px; 
-      border: 1px solid #ccc; 
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      background-color: #f9f9f9;
+      margin: 0;
+      padding: 30px; 
+      background-color: var(--white);
+      transition: all 0.3s ease;
     }
-    .controls { margin: 15px 0; }
+    
+    .question-card .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .question-text {
+      font-size: 20px;
+      margin-bottom: 25px;
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+    
+    .expected-answer {
+      color: var(--text-light);
+      font-style: italic;
+    }
+    
+    .controls { 
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
     button { 
-      padding: 10px 18px; 
+      padding: 12px 20px; 
       font-size: 16px; 
-      margin-right: 8px; 
-      background-color: #4CAF50;
-      color: white;
+      font-weight: 500;
+      background-color: var(--baby-blue);
+      color: var(--white);
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    button:hover { background-color: #45a049; }
+    
+    button:hover { 
+      background-color: var(--baby-blue-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
     button:disabled { 
-      background-color: #cccccc; 
+      background-color: #dddddd; 
       cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
     }
-    .status { 
-      margin: 10px 0; 
+    
+    .record-btn {
+      background-color: #FF8FAB;
+    }
+    
+    .record-btn:hover {
+      background-color: #FF7096;
+    }
+    
+    .stop-btn {
+      background-color: #FFC2D1;
+    }
+    
+    .grade-btn {
+      background-color: var(--baby-blue-dark);
+    }
+    
+    .next-btn {
+      background-color: var(--success);
+      display: block;
+      margin-top: 20px;
+      width: 100%;
+    }
+    
+    .record-status, .grade-status { 
+      margin-left: 10px; 
       font-style: italic; 
-      color: #666;
+      color: var(--text-light);
     }
-    .progress { margin-bottom: 10px; }
-    #summary-container { display: none; }
+    
+    .user-answer {
+      background-color: var(--baby-blue-light);
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      margin: 15px 0;
+      min-height: 60px;
+      font-family: inherit;
+      color: var(--text-dark);
+    }
+    
+    #summary-container {
+      display: none;
+      padding: 30px;
+    }
+    
+    .summary-item {
+      background-color: var(--baby-blue-light);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .correct {
+      color: var(--success);
+      font-weight: 600;
+    }
+    
+    .incorrect {
+      color: var(--error);
+      font-weight: 600;
+    }
+    
+    #overall-score {
+      background-color: var(--baby-blue);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      text-align: center;
+      color: var(--white);
+    }
+    
+    #overall-score h3 {
+      font-size: 24px;
+      margin: 0 0 10px 0;
+    }
+    
+    .loading-container {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--baby-blue-light);
+      border-top: 5px solid var(--baby-blue-dark);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      
+      .question-card {
+        padding: 20px;
+      }
+      
+      .question-text {
+        font-size: 18px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Lecture Quiz Game</h1>
-  <div class="progress">
-    <span id="progress-text"></span>
-  </div>
-  
-  <div id="question-container">
-    <p id="no-questions">No questions available. Please process your lecture captions.</p>
-  </div>
-  
-  <div id="summary-container">
-    <h2>Quiz Summary</h2>
-    <div id="summary-content"></div>
-    <div id="overall-score"></div>
-    <button id="restart-btn">Play Again</button>
+  <div class="app-container">
+    <div class="app-header">
+      <h1>Lecture Quiz Game</h1>
+      <div id="progress-container" class="progress-container">
+        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+      </div>
+      <span id="progress-text"></span>
+    </div>
+    
+    <div id="question-container">
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p id="no-questions">Waiting for lecture questions...</p>
+        <p>Process your lecture captions to start the quiz.</p>
+      </div>
+    </div>
+    
+    <div id="summary-container">
+      <h2>Quiz Summary</h2>
+      <div id="summary-content"></div>
+      <div id="overall-score"></div>
+      <button id="restart-btn">Play Again</button>
+    </div>
   </div>
   
   <script>
@@ -78,12 +278,22 @@
         <p class="question-text">${q.question}</p>
         <p><strong>Expected Answer (for testing):</strong> <span class="expected-answer">${q.answer}</span></p>
         <div class="controls">
-          <button class="record-answer-btn" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>Record Answer</button>
-          <button class="stop-answer-btn" id="stop-btn" disabled>Stop Recording</button>
+          <button class="record-btn" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"></circle>
+            </svg>
+            Record Answer
+          </button>
+          <button class="stop-btn" id="stop-btn" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="6" width="12" height="12"></rect>
+            </svg>
+            Stop
+          </button>
           <span class="record-status" id="record-status"></span>
         </div>
         <p><strong>Your Answer:</strong></p>
-        <pre class="user-answer" id="user-answer">${userAnswers[index] || ""}</pre>
+        <div class="user-answer" id="user-answer">${userAnswers[index] || ""}</div>
         <div class="grade-container">
           <button class="grade-btn" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
           <p class="grade-status" id="grade-status">${grades[index] || ""}</p>
@@ -97,7 +307,12 @@
       if (questions.length === 0) return;
       const container = document.getElementById("question-container");
       container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
+      
+      // Update progress
+      const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+      document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
       document.getElementById("progress-text").textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+      
       initEventListeners();
     }
     
@@ -147,12 +362,14 @@
             recordStatus.textContent = "Recording...";
             recordBtn.disabled = true;
             stopBtn.disabled = false;
+            recordBtn.style.backgroundColor = "#ff4757"; // Recording indicator
           };
           
           mediaRecorder.onstop = async () => {
             stream.getTracks().forEach(track => track.stop());
             stopBtn.disabled = true;
             recordStatus.textContent = "Processing audio...";
+            recordBtn.style.backgroundColor = ""; // Reset color
             const audioBlob = new Blob(audioChunks, { type: chosenType });
             let extension = 'webm';
             if (chosenType.includes('ogg')) {
@@ -205,8 +422,20 @@
           });
           const gradeResult = await gradeResponse.json();
           if (gradeResult.grade) {
-            gradeStatus.textContent = gradeResult.grade;
-            grades[currentQuestionIndex] = gradeResult.grade;
+            const gradeText = gradeResult.grade;
+            grades[currentQuestionIndex] = gradeText;
+            
+            // Change styling based on result
+            if (gradeText.toLowerCase().startsWith("correct")) {
+              gradeStatus.innerHTML = `<span class="correct">✓</span> ${gradeText}`;
+              userAnswerEl.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
+              userAnswerEl.style.borderLeft = "4px solid #4CAF50";
+            } else {
+              gradeStatus.innerHTML = `<span class="incorrect">✗</span> ${gradeText}`;
+              userAnswerEl.style.backgroundColor = "rgba(255, 107, 107, 0.1)";
+              userAnswerEl.style.borderLeft = "4px solid #FF6B6B";
+            }
+            
             nextBtn.style.display = "block";
           } else {
             gradeStatus.textContent = "Error grading answer.";
@@ -227,7 +456,7 @@
     }
     
     function showSummary() {
-      document.getElementById("question-container").innerHTML = "";
+      document.getElementById("question-container").style.display = "none";
       const summaryContainer = document.getElementById("summary-container");
       const summaryContent = document.getElementById("summary-content");
       const overallScoreEl = document.getElementById("overall-score");
@@ -247,7 +476,6 @@
         // Mark as correct only if "incorrect" is not present and "correct" is present.
         let isCorrect = !hasIncorrect && hasCorrect;
         
-        let resultClass = isCorrect ? "correct" : "incorrect";
         if (isCorrect) {
           correctCount++;
         } else {
@@ -260,7 +488,7 @@
             <p><strong>Question:</strong> ${q.question}</p>
             <p><strong>Expected Answer:</strong> ${q.answer}</p>
             <p><strong>Your Answer:</strong> ${userAnswers[index] || "No answer provided"}</p>
-            <p><strong>Result:</strong> <span class="${resultClass}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
+            <p><strong>Result:</strong> <span class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
           </div>
         `;
       });
@@ -276,7 +504,8 @@
       `;
       
       summaryContainer.style.display = "block";
-      document.getElementById("progress-text").textContent = "100% Completed";
+      document.getElementById("progress-bar").style.width = "100%";
+      document.getElementById("progress-text").textContent = "Quiz Complete!";
       
       document.getElementById("restart-btn").addEventListener("click", () => {
         currentQuestionIndex = 0;
@@ -287,6 +516,18 @@
         showCurrentQuestion();
       });
     }
+    
+    // Animated loading state
+    let loadingDots = 0;
+    const loadingInterval = setInterval(() => {
+      if (document.getElementById("no-questions")) {
+        loadingDots = (loadingDots + 1) % 4;
+        const dots = ".".repeat(loadingDots);
+        document.getElementById("no-questions").textContent = `Waiting for lecture questions${dots}`;
+      } else {
+        clearInterval(loadingInterval);
+      }
+    }, 500);
     
     // Poll for status updates every 3 seconds until questions are loaded
     let statusInterval = setInterval(async () => {
@@ -299,8 +540,10 @@
               questions = JSON.parse(data.processed_text);
               if (document.getElementById("no-questions")) {
                 clearInterval(statusInterval);
+                clearInterval(loadingInterval);
                 userAnswers = new Array(questions.length).fill("");
                 grades = new Array(questions.length).fill("");
+                document.getElementById("question-container").innerHTML = "";
                 showCurrentQuestion();
               }
             } catch (e) {
