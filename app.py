@@ -3,6 +3,7 @@ import openai
 import tempfile
 import os
 import json
+import SerialConnectionToArduino
 
 app = Flask(__name__)
 
@@ -20,6 +21,9 @@ audio_transcription = ""
 START_PAGE = "start.html"
 MAIN_PAGE = "show.html"
 END_PAGE = "win.html"
+
+ARDUINO = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=1)
+
 
 DEFAULT_QUESTIONS = 5
 
