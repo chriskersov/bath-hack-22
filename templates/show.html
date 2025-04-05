@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lecture Quiz Game</title>
+  <style>
+    :root {
+      --baby-blue: #A2D2FF;
+      --baby-blue-light: #CEE5FF;
+      --baby-blue-dark: #84B4E3;
+      --white: #FFFFFF;
+      --text-dark: #333333;
+      --text-light: #555555;
+      --success: #4CAF50;
+      --error: #FF6B6B;
+    }
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 20px; 
+      line-height: 1.6;
+      background-color: var(--white);
+      color: var(--text-dark);
+    }
+    
+    .app-container {
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid var(--baby-blue-light);
+    }
+    
+    .app-header {
+      background-color: var(--baby-blue);
+      color: var(--white);
+      padding: 20px 30px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .app-header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .progress-container {
+      background-color: var(--baby-blue-light);
+      height: 10px;
+      width: 100%;
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: var(--baby-blue-dark);
+      transition: width 0.3s ease;
+    }
+    
+    .question-card { 
+      margin-bottom: 20px; 
+      padding: 30px; 
+      background-color: var(--white);
+      transition: all 0.3s ease;
+    }
+    
+    .question-card .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .question-text {
+      font-size: 20px;
+      margin-bottom: 25px;
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+    
+    .expected-answer {
+      color: var(--text-light);
+      font-style: italic;
+    }
+    
+    .controls { 
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    button { 
+      padding: 12px 20px; 
+      font-size: 16px; 
+      font-weight: 500;
+      background-color: var(--baby-blue);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    button:hover { 
+      background-color: var(--baby-blue-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled { 
+      background-color: #dddddd; 
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    
+    .record-btn {
+      background-color: #FF8FAB;
+    }
+    
+    .record-btn:hover {
+      background-color: #FF7096;
+    }
+    
+    .stop-btn {
+      background-color: #FFC2D1;
+    }
+    
+    .grade-btn {
+      background-color: var(--baby-blue-dark);
+    }
+    
+    .next-btn {
+      background-color: var(--success);
+      display: block;
+      margin-top: 20px;
+      width: 100%;
+    }
+    
+    .record-status, .grade-status { 
+      margin-left: 10px; 
+      font-style: italic; 
+      color: var(--text-light);
+    }
+    
+    .user-answer {
+      background-color: var(--baby-blue-light);
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      margin: 15px 0;
+      font-family: inherit;
+      color: var(--text-dark);
+    }
+    
+    #summary-container {
+      display: none;
+      padding: 30px;
+    }
+    
+    .summary-item {
+      background-color: var(--baby-blue-light);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .correct {
+      color: var(--success);
+      font-weight: 600;
+    }
+    
+    .incorrect {
+      color: var(--error);
+      font-weight: 600;
+    }
+    
+    #overall-score {
+      background-color: var(--baby-blue);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      text-align: center;
+      color: var(--white);
+    }
+    
+    #overall-score h3 {
+      font-size: 24px;
+      margin: 0 0 10px 0;
+    }
+    
+    .loading-container {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--baby-blue-light);
+      border-top: 5px solid var(--baby-blue-dark);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      
+      .question-card {
+        padding: 20px;
+      }
+      
+      .question-text {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header">
+      <h1>Lecture Quiz Game</h1>
+      <div id="progress-container" class="progress-container">
+        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+      </div>
+      <span id="progress-text"></span>
+    </div>
+    
+    <div id="question-container">
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p id="no-questions">Waiting for lecture questions...</p>
+        <p>Process your lecture captions to start the quiz.</p>
+      </div>
+    </div>
+    
+    <div id="summary-container">
+      <h2>Quiz Summary</h2>
+      <div id="summary-content"></div>
+      <div id="overall-score"></div>
+      <button id="restart-btn">Play Again</button>
+    </div>
+  </div>
+  
+  <script>
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let grades = [];
+    
+    function createQuestionHTML(q, index) {
+      return `
+      <div class="question-card" data-index="${index}">
+        <div class="header">
+          <h2>Question ${index + 1}</h2>
+          <p><strong>Progress:</strong> Question ${index + 1} of ${questions.length}</p>
+        </div>
+        <p class="question-text">${q.question}</p>
+        <p><strong>Expected Answer (for testing):</strong> <span class="expected-answer">${q.answer}</span></p>
+        <div class="controls">
+          <button class="record-btn" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6"></circle>
+            </svg>
+            Record Answer
+          </button>
+          <button class="stop-btn" id="stop-btn" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="6" width="12" height="12"></rect>
+            </svg>
+            Stop
+          </button>
+          <span class="record-status" id="record-status"></span>
+        </div>
+        <p><strong>Your Answer:</strong></p>
+        <div class="user-answer" id="user-answer">${userAnswers[index] || ""}</div>
+        <div class="grade-container">
+          <button class="grade-btn" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
+          <p class="grade-status" id="grade-status">${grades[index] || ""}</p>
+        </div>
+        <button class="next-btn" id="next-btn" style="display: none;">Next Question</button>
+      </div>
+      `;
+    }
+    
+    function showCurrentQuestion() {
+      if (questions.length === 0) return;
+      const container = document.getElementById("question-container");
+      container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
+      
+      // Update progress bar
+      const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+      document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
+      document.getElementById("progress-text").textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+      
+      initEventListeners();
+    }
+    
+    function initEventListeners() {
+      const recordBtn = document.getElementById("record-btn");
+      const stopBtn = document.getElementById("stop-btn");
+      const recordStatus = document.getElementById("record-status");
+      const userAnswerEl = document.getElementById("user-answer");
+      const gradeBtn = document.getElementById("grade-btn");
+      const gradeStatus = document.getElementById("grade-status");
+      const nextBtn = document.getElementById("next-btn");
+      
+      let mediaRecorder;
+      let audioChunks = [];
+      let stream;
+      
+      function getPreferredMimeType() {
+        if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
+          return 'audio/webm; codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')) {
+          return 'audio/ogg; codecs=opus';
+        } else {
+          return 'audio/webm';
+        }
+      }
+      
+      // Prevent re-recording if answer exists.
+      if (userAnswers[currentQuestionIndex]) {
+        recordBtn.disabled = true;
+      }
+      
+      recordBtn.addEventListener('click', async () => {
+        try {
+          audioChunks = [];
+          recordStatus.textContent = "Initializing microphone...";
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const chosenType = getPreferredMimeType();
+          mediaRecorder = new MediaRecorder(stream, { mimeType: chosenType });
+          
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              audioChunks.push(e.data);
+            }
+          };
+          
+          mediaRecorder.onstart = () => {
+            recordStatus.textContent = "Recording...";
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            recordBtn.style.backgroundColor = "#ff4757";
+          };
+          
+          mediaRecorder.onstop = async () => {
+            stream.getTracks().forEach(track => track.stop());
+            stopBtn.disabled = true;
+            recordStatus.textContent = "Processing audio...";
+            recordBtn.style.backgroundColor = "";
+            const audioBlob = new Blob(audioChunks, { type: chosenType });
+            let extension = 'webm';
+            if (chosenType.includes('ogg')) {
+              extension = 'ogg';
+            }
+            const formData = new FormData();
+            formData.append("audio", audioBlob, `recording.${extension}`);
+            try {
+              const response = await fetch("/api/transcribe", { method: "POST", body: formData });
+              const result = await response.json();
+              if (result.audio_transcription) {
+                userAnswerEl.textContent = result.audio_transcription;
+                userAnswers[currentQuestionIndex] = result.audio_transcription;
+                recordStatus.textContent = "Recording complete.";
+                gradeBtn.disabled = false;
+              } else {
+                recordStatus.textContent = "Error transcribing audio.";
+              }
+            } catch (error) {
+              recordStatus.textContent = "Error: " + error.message;
+            }
+          };
+          mediaRecorder.start();
+        } catch (error) {
+          recordStatus.textContent = "Error: " + error.message;
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+        }
+      });
+      
+      gradeBtn.addEventListener('click', async () => {
+        const questionText = questions[currentQuestionIndex].question;
+        const expectedAnswer = questions[currentQuestionIndex].answer;
+        const userAnswer = userAnswerEl.textContent;
+        gradeStatus.textContent = "Grading answer...";
+        gradeBtn.disabled = true;
+        try {
+          const gradeResponse = await fetch("/api/grade", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question: questionText,
+              expected_answer: expectedAnswer,
+              user_answer: userAnswer
+            })
+          });
+          const gradeResult = await gradeResponse.json();
+          if (gradeResult.grade) {
+            const gradeText = gradeResult.grade;
+            grades[currentQuestionIndex] = gradeText;
+            
+            if (/\bINCORRECT\b/i.test(gradeText)) {
+              gradeStatus.innerHTML = `<span class="incorrect">✗</span> ${gradeText}`;
+              userAnswerEl.style.backgroundColor = "rgba(255, 107, 107, 0.1)";
+              userAnswerEl.style.borderLeft = "4px solid #FF6B6B";
+            } else if (/\bCORRECT\b/i.test(gradeText)) {
+              gradeStatus.innerHTML = `<span class="correct">✓</span> ${gradeText}`;
+              userAnswerEl.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
+              userAnswerEl.style.borderLeft = "4px solid #4CAF50";
+            } else {
+              gradeStatus.textContent = gradeText;
+            }
+            nextBtn.style.display = "block";
+          } else {
+            gradeStatus.textContent = "Error grading answer.";
+          }
+        } catch (error) {
+          gradeStatus.textContent = "Error: " + error.message;
+        }
+      });
+      
+      nextBtn.addEventListener('click', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+          showCurrentQuestion();
+        } else {
+          showSummary();
+        }
+      });
+    }
+    
+    function showSummary() {
+      document.getElementById("question-container").style.display = "none";
+      const summaryContainer = document.getElementById("summary-container");
+      const summaryContent = document.getElementById("summary-content");
+      const overallScoreEl = document.getElementById("overall-score");
+      let summaryHTML = "";
+      
+      let correctCount = 0;
+      let incorrectCount = 0;
+      
+      questions.forEach((q, index) => {
+        let gradeText = grades[index] || "";
+        let gradeLower = gradeText.toLowerCase().trim();
+        
+        // Use regex with word boundaries to detect full words.
+        const hasIncorrect = /\bincorrect\b/i.test(gradeLower);
+        const hasCorrect = /\bcorrect\b/i.test(gradeLower);
+        
+        // Mark as correct only if "incorrect" is not present and "correct" is present.
+        let isCorrect = !hasIncorrect && hasCorrect;
+        
+        if (isCorrect) {
+          correctCount++;
+        } else {
+          incorrectCount++;
+        }
+        
+        summaryHTML += `
+          <div class="summary-item">
+            <h3>Question ${index + 1}</h3>
+            <p><strong>Question:</strong> ${q.question}</p>
+            <p><strong>Expected Answer:</strong> ${q.answer}</p>
+            <p><strong>Your Answer:</strong> ${userAnswers[index] || "No answer provided"}</p>
+            <p><strong>Result:</strong> <span class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
+          </div>
+        `;
+      });
+      
+      summaryContent.innerHTML = summaryHTML;
+      
+      const totalQuestions = questions.length;
+      const score = Math.round((correctCount / totalQuestions) * 100);
+      
+      overallScoreEl.innerHTML = `
+        <h3>Your Score: ${score}%</h3>
+        <p>Correct: ${correctCount} | Incorrect: ${incorrectCount}</p>
+      `;
+      
+      summaryContainer.style.display = "block";
+      document.getElementById("progress-bar").style.width = "100%";
+      document.getElementById("progress-text").textContent = "Quiz Complete!";
+      
+      // Instead of resetting the quiz in place, redirect to the start page so that the user can select questions and presenter again.
+      document.getElementById("restart-btn").addEventListener("click", () => {
+        window.location.href = "/start";
+      });
+    }
+    
+    // Poll for status updates every 3 seconds until questions are loaded
+    let statusInterval = setInterval(async () => {
+      try {
+        const response = await fetch("/api/status");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.processed_text && data.processed_text.trim() !== "") {
+            try {
+              questions = JSON.parse(data.processed_text);
+              if (document.getElementById("no-questions")) {
+                clearInterval(statusInterval);
+                userAnswers = new Array(questions.length).fill("");
+                grades = new Array(questions.length).fill("");
+                document.getElementById("question-container").innerHTML = "";
+                showCurrentQuestion();
+              }
+            } catch (e) {
+              console.error("Error parsing processed_text as JSON:", e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching status:", error);
+      }
+    }, 3000);
+  </script>
+</body>
+</html>

@@ -72,6 +72,7 @@ def api_captions():
         processed_text = completion.choices[0].message.content
     except Exception as e:
         processed_text = f"Error processing captions: {e}"
+        print(processed_text)
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"status": "success", "processed_text": processed_text}), 200
@@ -161,11 +162,11 @@ def api_status():
 def index():
     return redirect(url_for("start"))
 
-@app.route("/start", methods=["GET"])
+@app.route("/WhoWantsToBeAGraduate/Prepare", methods=["GET"])
 def start():
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
 
-@app.route("/gameshow", methods=["POST"])
+@app.route("/WhoWantsToBeAGraduate/Gameshow", methods=["POST"])
 def showtime():
     global num_questions_to_generate, presenter_name
     
@@ -183,9 +184,9 @@ def showtime():
     global processed_text
     processed_text = ""
     
-    return render_template("index.html")
+    return render_template("show.html")
 
-@app.route("/finale", methods=["GET"])
+@app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():
     return render_template(END_PAGE)
 
