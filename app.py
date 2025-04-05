@@ -3,7 +3,8 @@ import openai
 import tempfile
 import os
 import json
-from voice_read import generate_speech
+from services.voice_read import generate_speech
+
 app = Flask(__name__)
 app.secret_key = "quiz_game_secret_key"  # Needed for session
 
@@ -133,8 +134,8 @@ def api_grade():
         f"User Answer: {user_answer}\n\n"
         "You are grading the user's answer against the expected answer. "
         "Be lenient - they don't need to match exactly, just demonstrate understanding of the concept. "
-        "Start your response with EXACTLY ONE of these keywords: 'CORRECT:' or 'INCORRECT:' "
-        "followed by a brief explanation. Make sure your response starts with one of these exact keywords."
+        "Start your response with EXACTLY ONE of these keywords: 'CORRECT:' or 'INCORRECT: if it is correct or incorrect nothing else' "
+        # "followed by a brief explanation. Make sure your response starts with one of these exact keywords."
     )
     
     try:
@@ -160,6 +161,7 @@ def api_status():
 # Make the start page the default route
 @app.route("/", methods=["GET"])
 def index():
+    generate_speech("Test")
     return redirect(url_for("start"))
 
 @app.route("/WhoWantsToBeAGraduate/Prepare", methods=["GET"])
@@ -186,15 +188,22 @@ def showtime():
     
     return render_template("show.html")
 
-@app.route("/tts-example", methods=["GET"])
-def tts_example():
-    text = "This is an example text to be converted to speech."
-    # Call the TTS function. You can change the output filename if needed.
-    success = generate_speech(text, "example_output.mp3")
+@app.route("/tts", methods=["GET"])
+def tts():
+    text = request.args.get("text", "")
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+    
+    # Generate a unique filename using timestamp or UUID
+    import uuid
+    unique_id = str(uuid.uuid4())
+    output_filename = f"static/tts_output_{unique_id}.mp3"
+    
+    success = generate_speech(text, output_filename=output_filename)
     if success:
-        return jsonify({"status": "Speech generated successfully"}), 200
+        return jsonify({"status": "success", "filename": output_filename}), 200
     else:
-        return jsonify({"error": "Speech generation failed"}), 500
+        return jsonify({"error": "Text-to-speech conversion failed"}), 500
 
 @app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():
