@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lecture Quiz Game</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 20px; 
+      line-height: 1.6;
+    }
+    .question-card { 
+      margin-bottom: 20px; 
+      padding: 20px; 
+      border: 1px solid #ccc; 
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background-color: #f9f9f9;
+    }
+    .controls { margin: 15px 0; }
+    button { 
+      padding: 10px 18px; 
+      font-size: 16px; 
+      margin-right: 8px; 
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #45a049; }
+    button:disabled { 
+      background-color: #cccccc; 
+      cursor: not-allowed;
+    }
+    .status { 
+      margin: 10px 0; 
+      font-style: italic; 
+      color: #666;
+    }
+    .progress { margin-bottom: 10px; }
+    #summary-container { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Lecture Quiz Game</h1>
+  <div class="progress">
+    <span id="progress-text"></span>
+  </div>
+  
+  <div id="question-container">
+    <p id="no-questions">No questions available. Please process your lecture captions.</p>
+  </div>
+  
+  <div id="summary-container">
+    <h2>Quiz Summary</h2>
+    <div id="summary-content"></div>
+    <div id="overall-score"></div>
+    <button id="restart-btn">Play Again</button>
+  </div>
+  
+  <script>
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let grades = [];
+    
+    function createQuestionHTML(q, index) {
+      return `
+      <div class="question-card" data-index="${index}">
+        <div class="header">
+          <h2>Question ${index + 1}</h2>
+          <p><strong>Progress:</strong> Question ${index + 1} of ${questions.length}</p>
+        </div>
+        <p class="question-text">${q.question}</p>
+        <p><strong>Expected Answer (for testing):</strong> <span class="expected-answer">${q.answer}</span></p>
+        <div class="controls">
+          <button class="record-answer-btn" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>Record Answer</button>
+          <button class="stop-answer-btn" id="stop-btn" disabled>Stop Recording</button>
+          <span class="record-status" id="record-status"></span>
+        </div>
+        <p><strong>Your Answer:</strong></p>
+        <pre class="user-answer" id="user-answer">${userAnswers[index] || ""}</pre>
+        <div class="grade-container">
+          <button class="grade-btn" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
+          <p class="grade-status" id="grade-status">${grades[index] || ""}</p>
+        </div>
+        <button class="next-btn" id="next-btn" style="display: none;">Next Question</button>
+      </div>
+      `;
+    }
+    
+    function showCurrentQuestion() {
+      if (questions.length === 0) return;
+      const container = document.getElementById("question-container");
+      container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
+      document.getElementById("progress-text").textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+      initEventListeners();
+    }
+    
+    function initEventListeners() {
+      const recordBtn = document.getElementById("record-btn");
+      const stopBtn = document.getElementById("stop-btn");
+      const recordStatus = document.getElementById("record-status");
+      const userAnswerEl = document.getElementById("user-answer");
+      const gradeBtn = document.getElementById("grade-btn");
+      const gradeStatus = document.getElementById("grade-status");
+      const nextBtn = document.getElementById("next-btn");
+      
+      let mediaRecorder;
+      let audioChunks = [];
+      let stream;
+      
+      function getPreferredMimeType() {
+        if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
+          return 'audio/webm; codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')) {
+          return 'audio/ogg; codecs=opus';
+        } else {
+          return 'audio/webm';
+        }
+      }
+      
+      // Prevent re-recording if answer exists.
+      if (userAnswers[currentQuestionIndex]) {
+        recordBtn.disabled = true;
+      }
+      
+      recordBtn.addEventListener('click', async () => {
+        try {
+          audioChunks = [];
+          recordStatus.textContent = "Initializing microphone...";
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const chosenType = getPreferredMimeType();
+          mediaRecorder = new MediaRecorder(stream, { mimeType: chosenType });
+          
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              audioChunks.push(e.data);
+            }
+          };
+          
+          mediaRecorder.onstart = () => {
+            recordStatus.textContent = "Recording...";
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+          };
+          
+          mediaRecorder.onstop = async () => {
+            stream.getTracks().forEach(track => track.stop());
+            stopBtn.disabled = true;
+            recordStatus.textContent = "Processing audio...";
+            const audioBlob = new Blob(audioChunks, { type: chosenType });
+            let extension = 'webm';
+            if (chosenType.includes('ogg')) {
+              extension = 'ogg';
+            }
+            const formData = new FormData();
+            formData.append("audio", audioBlob, `recording.${extension}`);
+            try {
+              const response = await fetch("/api/transcribe", { method: "POST", body: formData });
+              const result = await response.json();
+              if (result.audio_transcription) {
+                userAnswerEl.textContent = result.audio_transcription;
+                userAnswers[currentQuestionIndex] = result.audio_transcription;
+                recordStatus.textContent = "Recording complete.";
+                gradeBtn.disabled = false;
+              } else {
+                recordStatus.textContent = "Error transcribing audio.";
+              }
+            } catch (error) {
+              recordStatus.textContent = "Error: " + error.message;
+            }
+          };
+          mediaRecorder.start();
+        } catch (error) {
+          recordStatus.textContent = "Error: " + error.message;
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+        }
+      });
+      
+      gradeBtn.addEventListener('click', async () => {
+        const questionText = questions[currentQuestionIndex].question;
+        const expectedAnswer = questions[currentQuestionIndex].answer;
+        const userAnswer = userAnswerEl.textContent;
+        gradeStatus.textContent = "Grading answer...";
+        gradeBtn.disabled = true;
+        try {
+          const gradeResponse = await fetch("/api/grade", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question: questionText,
+              expected_answer: expectedAnswer,
+              user_answer: userAnswer
+            })
+          });
+          const gradeResult = await gradeResponse.json();
+          if (gradeResult.grade) {
+            gradeStatus.textContent = gradeResult.grade;
+            grades[currentQuestionIndex] = gradeResult.grade;
+            nextBtn.style.display = "block";
+          } else {
+            gradeStatus.textContent = "Error grading answer.";
+          }
+        } catch (error) {
+          gradeStatus.textContent = "Error: " + error.message;
+        }
+      });
+      
+      nextBtn.addEventListener('click', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+          showCurrentQuestion();
+        } else {
+          showSummary();
+        }
+      });
+    }
+    
+    function showSummary() {
+      document.getElementById("question-container").innerHTML = "";
+      const summaryContainer = document.getElementById("summary-container");
+      const summaryContent = document.getElementById("summary-content");
+      const overallScoreEl = document.getElementById("overall-score");
+      let summaryHTML = "";
+      
+      let correctCount = 0;
+      let incorrectCount = 0;
+      
+      questions.forEach((q, index) => {
+        let gradeText = grades[index] || "";
+        let gradeLower = gradeText.toLowerCase().trim();
+        
+        // Use regex with word boundaries to detect full words.
+        const hasIncorrect = /\bincorrect\b/i.test(gradeLower);
+        const hasCorrect = /\bcorrect\b/i.test(gradeLower);
+        
+        // Mark as correct only if "incorrect" is not present and "correct" is present.
+        let isCorrect = !hasIncorrect && hasCorrect;
+        
+        let resultClass = isCorrect ? "correct" : "incorrect";
+        if (isCorrect) {
+          correctCount++;
+        } else {
+          incorrectCount++;
+        }
+        
+        summaryHTML += `
+          <div class="summary-item">
+            <h3>Question ${index + 1}</h3>
+            <p><strong>Question:</strong> ${q.question}</p>
+            <p><strong>Expected Answer:</strong> ${q.answer}</p>
+            <p><strong>Your Answer:</strong> ${userAnswers[index] || "No answer provided"}</p>
+            <p><strong>Result:</strong> <span class="${resultClass}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
+          </div>
+        `;
+      });
+      
+      summaryContent.innerHTML = summaryHTML;
+      
+      const totalQuestions = questions.length;
+      const score = Math.round((correctCount / totalQuestions) * 100);
+      
+      overallScoreEl.innerHTML = `
+        <h3>Your Score: ${score}%</h3>
+        <p>Correct: ${correctCount} | Incorrect: ${incorrectCount}</p>
+      `;
+      
+      summaryContainer.style.display = "block";
+      document.getElementById("progress-text").textContent = "100% Completed";
+      
+      document.getElementById("restart-btn").addEventListener("click", () => {
+        currentQuestionIndex = 0;
+        userAnswers = new Array(questions.length).fill("");
+        grades = new Array(questions.length).fill("");
+        summaryContainer.style.display = "none";
+        document.getElementById("question-container").style.display = "block";
+        showCurrentQuestion();
+      });
+    }
+    
+    // Poll for status updates every 3 seconds until questions are loaded
+    let statusInterval = setInterval(async () => {
+      try {
+        const response = await fetch("/api/status");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.processed_text && data.processed_text.trim() !== "") {
+            try {
+              questions = JSON.parse(data.processed_text);
+              if (document.getElementById("no-questions")) {
+                clearInterval(statusInterval);
+                userAnswers = new Array(questions.length).fill("");
+                grades = new Array(questions.length).fill("");
+                showCurrentQuestion();
+              }
+            } catch (e) {
+              console.error("Error parsing processed_text as JSON:", e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching status:", error);
+      }
+    }, 3000);
+  </script>
+</body>
+</html>
