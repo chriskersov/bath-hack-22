@@ -63,7 +63,7 @@
     }
     
     .question-card { 
-      margin: 0;
+      margin-bottom: 20px; 
       padding: 30px; 
       background-color: var(--white);
       transition: all 0.3s ease;
@@ -160,7 +160,6 @@
       border-radius: 8px;
       white-space: pre-wrap;
       margin: 15px 0;
-      min-height: 60px;
       font-family: inherit;
       color: var(--text-dark);
     }
@@ -308,7 +307,7 @@
       const container = document.getElementById("question-container");
       container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
       
-      // Update progress
+      // Update progress bar
       const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
       document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
       document.getElementById("progress-text").textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
@@ -362,14 +361,14 @@
             recordStatus.textContent = "Recording...";
             recordBtn.disabled = true;
             stopBtn.disabled = false;
-            recordBtn.style.backgroundColor = "#ff4757"; // Recording indicator
+            recordBtn.style.backgroundColor = "#ff4757";
           };
           
           mediaRecorder.onstop = async () => {
             stream.getTracks().forEach(track => track.stop());
             stopBtn.disabled = true;
             recordStatus.textContent = "Processing audio...";
-            recordBtn.style.backgroundColor = ""; // Reset color
+            recordBtn.style.backgroundColor = "";
             const audioBlob = new Blob(audioChunks, { type: chosenType });
             let extension = 'webm';
             if (chosenType.includes('ogg')) {
@@ -425,17 +424,17 @@
             const gradeText = gradeResult.grade;
             grades[currentQuestionIndex] = gradeText;
             
-            // Change styling based on result
-            if (gradeText.toLowerCase().startsWith("correct")) {
+            if (/\bINCORRECT\b/i.test(gradeText)) {
+              gradeStatus.innerHTML = `<span class="incorrect">✗</span> ${gradeText}`;
+              userAnswerEl.style.backgroundColor = "rgba(255, 107, 107, 0.1)";
+              userAnswerEl.style.borderLeft = "4px solid #FF6B6B";
+            } else if (/\bCORRECT\b/i.test(gradeText)) {
               gradeStatus.innerHTML = `<span class="correct">✓</span> ${gradeText}`;
               userAnswerEl.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
               userAnswerEl.style.borderLeft = "4px solid #4CAF50";
             } else {
-              gradeStatus.innerHTML = `<span class="incorrect">✗</span> ${gradeText}`;
-              userAnswerEl.style.backgroundColor = "rgba(255, 107, 107, 0.1)";
-              userAnswerEl.style.borderLeft = "4px solid #FF6B6B";
+              gradeStatus.textContent = gradeText;
             }
-            
             nextBtn.style.display = "block";
           } else {
             gradeStatus.textContent = "Error grading answer.";
@@ -507,27 +506,11 @@
       document.getElementById("progress-bar").style.width = "100%";
       document.getElementById("progress-text").textContent = "Quiz Complete!";
       
+      // Instead of resetting the quiz in place, redirect to the start page so that the user can select questions and presenter again.
       document.getElementById("restart-btn").addEventListener("click", () => {
-        currentQuestionIndex = 0;
-        userAnswers = new Array(questions.length).fill("");
-        grades = new Array(questions.length).fill("");
-        summaryContainer.style.display = "none";
-        document.getElementById("question-container").style.display = "block";
-        showCurrentQuestion();
+        window.location.href = "/start";
       });
     }
-    
-    // Animated loading state
-    let loadingDots = 0;
-    const loadingInterval = setInterval(() => {
-      if (document.getElementById("no-questions")) {
-        loadingDots = (loadingDots + 1) % 4;
-        const dots = ".".repeat(loadingDots);
-        document.getElementById("no-questions").textContent = `Waiting for lecture questions${dots}`;
-      } else {
-        clearInterval(loadingInterval);
-      }
-    }, 500);
     
     // Poll for status updates every 3 seconds until questions are loaded
     let statusInterval = setInterval(async () => {
@@ -540,7 +523,6 @@
               questions = JSON.parse(data.processed_text);
               if (document.getElementById("no-questions")) {
                 clearInterval(statusInterval);
-                clearInterval(loadingInterval);
                 userAnswers = new Array(questions.length).fill("");
                 grades = new Array(questions.length).fill("");
                 document.getElementById("question-container").innerHTML = "";

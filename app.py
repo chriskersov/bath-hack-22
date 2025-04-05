@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, redirect, url_for, session
 import openai
 import tempfile
 import os
 import json
-import SerialConnectionToArduino
 
 app = Flask(__name__)
+app.secret_key = "quiz_game_secret_key"  # Needed for session
 
 # ===============================
 # Lecture Quiz Game Functionality
@@ -17,19 +17,24 @@ app = Flask(__name__)
 captions_text = ""
 processed_text = ""
 audio_transcription = ""
+num_questions_to_generate = 5  # Default value
+presenter_name = "Default Host"  # Default value
 
 START_PAGE = "start.html"
-MAIN_PAGE = "show.html"
+MAIN_PAGE = "index.html"  # Using the actual HTML filename
 END_PAGE = "win.html"
 
+<<<<<<< Updated upstream
 
 
+=======
+>>>>>>> Stashed changes
 DEFAULT_QUESTIONS = 5
 
 IMAGES = [
-    "/images/Wordle.png",
-    "/images/Wordle.png",
-    "/images/Wordle.png"
+    "images/Wordle.png",
+    "images/Wordle.png",
+    "images/Wordle.png"
 ]
 
 OPTIONS = [
@@ -44,18 +49,19 @@ openai.api_base = "https://hack.funandprofit.ai/api/providers/openai/v1"
 
 @app.route("/api/captions", methods=["POST"])
 def api_captions():
-    global captions_text, processed_text
+    global captions_text, processed_text, num_questions_to_generate
     data = request.get_json()
     if not data or "captions" not in data:
         return jsonify({"error": "No captions provided"}), 400
 
     captions_text = data["captions"]
 
+    # Use the global num_questions_to_generate
     instructions = (
-        "You are a gameshow host that will receive a lecture text. Your job is to read the lecture captions, understand them, "
-        "and produce exactly 2 easy questions, which are gameshow friendly meaning they are very short answers and very simple, based on the lecture with clear answers. "
-        "Output your result as a JSON array where each element is an object with two keys: 'question' and 'answer'. "
-        "Return only the JSON, without any additional text or markdown formatting."
+        f"You are a gameshow host that will receive a lecture text. Your job is to read the lecture captions, understand them, "
+        f"and produce exactly {num_questions_to_generate} easy questions, which are gameshow friendly meaning they are very short answers and very simple, based on the lecture with clear answers. "
+        f"Output your result as a JSON array where each element is an object with two keys: 'question' and 'answer'. "
+        f"Return only the JSON, without any additional text or markdown formatting."
     )
 
     messages = [
@@ -148,32 +154,45 @@ def api_grade():
 
 @app.route("/api/status", methods=["GET"])
 def api_status():
+    global presenter_name
     return jsonify({
         "processed_text": processed_text,
-        "audio_transcription": audio_transcription
+        "audio_transcription": audio_transcription,
+        "presenter": presenter_name
     })
 
-@app.route("/PLACEHOLDER/Prepare/", methods = ["GET"])
+# Make the start page the default route
+@app.route("/", methods=["GET"])
+def index():
+    return redirect(url_for("start"))
+
+@app.route("/start", methods=["GET"])
 def start():
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
 
-# @app.route("/Gameshow", methods = ["POST"])
-# def showtime():
-
-#     questions = request.form['counter_value']
-#     presenter = request.form['selected_option']
-
-#     return render_template(index.html)
-
-@app.route("/gameshow", methods = ["GET"])
-def index():
-
+@app.route("/gameshow", methods=["POST"])
+def showtime():
+    global num_questions_to_generate, presenter_name
+    
+    # Get values from the form
+    num_questions_to_generate = int(request.form.get('counter_value', DEFAULT_QUESTIONS))
+    presenter_name = request.form.get('selected_option', OPTIONS[0])
+    
+    # Store in session if needed for persistence
+    session['num_questions'] = num_questions_to_generate
+    session['presenter'] = presenter_name
+    
+    print(f"Starting game with {num_questions_to_generate} questions and presenter: {presenter_name}")
+    
+    # Reset processed text to ensure new questions are generated
+    global processed_text
+    processed_text = ""
+    
     return render_template("index.html")
 
-
-@app.route("/PLACEHOLDER/Finale/", methods = ["GET"])
+@app.route("/finale", methods=["GET"])
 def victory():
-    render_template(END_PAGE)
+    return render_template(END_PAGE)
 
 # ===============================
 # Run the Combined App
