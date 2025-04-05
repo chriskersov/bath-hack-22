@@ -3,7 +3,7 @@ import openai
 import tempfile
 import os
 import json
-
+from voice_read import generate_speech
 app = Flask(__name__)
 app.secret_key = "quiz_game_secret_key"  # Needed for session
 
@@ -54,7 +54,7 @@ def api_captions():
     # Use the global num_questions_to_generate
     instructions = (
         f"You are a gameshow host that will receive a lecture text. Your job is to read the lecture captions, understand them, "
-        f"and produce exactly {num_questions_to_generate} easy questions, which are gameshow friendly meaning they are very short answers and very simple, based on the lecture with clear answers. "
+        f"and produce exactly {num_questions_to_generate} easy questions not multiple choice answers should be maximum 5 words, which are gameshow friendly meaning they are very short answers and very simple, based on the lecture with clear answers. "
         f"Output your result as a JSON array where each element is an object with two keys: 'question' and 'answer'. "
         f"Return only the JSON, without any additional text or markdown formatting."
     )
@@ -185,6 +185,16 @@ def showtime():
     processed_text = ""
     
     return render_template("show.html")
+
+@app.route("/tts-example", methods=["GET"])
+def tts_example():
+    text = "This is an example text to be converted to speech."
+    # Call the TTS function. You can change the output filename if needed.
+    success = generate_speech(text, "example_output.mp3")
+    if success:
+        return jsonify({"status": "Speech generated successfully"}), 200
+    else:
+        return jsonify({"error": "Speech generation failed"}), 500
 
 @app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():
