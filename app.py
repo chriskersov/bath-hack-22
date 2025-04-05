@@ -132,7 +132,7 @@ def api_status():
         "audio_transcription": audio_transcription
     })
 
-@app.route("/")
+@app.route("/gameshow")
 def index():
     return render_template("index.html")
 
@@ -160,9 +160,9 @@ OPTIONS = [
 def start():
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
 
-@app.route("/PLACEHOLDER/Gameshow/", methods = ["GET, POST"])
-def showtime():
-    return render_template(MAIN_PAGE)
+# @app.route("/PLACEHOLDER/Gameshow/", methods = ["GET, POST"])
+# def showtime():
+#     return render_template(MAIN_PAGE)
 
 @app.route("/PLACEHOLDER/Finale/", methods=["GET"])
 def victory():
