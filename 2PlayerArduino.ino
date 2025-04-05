@@ -1,28 +1,3 @@
-/*
-  Button
-
-  Turns on and off a light emitting diode(LED) connected to digital pin 13,
-  when pressing a pushbutton attached to pin 2.
-
-  The circuit:
-  - LED attached from pin 13 to ground through 220 ohm resistor
-  - pushbutton attached to pin 2 from +5V
-  - 10K resistor attached to pin 2 from ground
-
-  - Note: on most Arduinos there is already an LED on the board
-    attached to pin 13.
-
-  created 2005
-  by DojoDave <http://www.0j0.org>
-  modified 30 Aug 2011
-  by Tom Igoe
-
-  This example code is in the public domain.
-
-  https://www.arduino.cc/en/Tutorial/BuiltInExamples/Button
-*/
-
-// constants won't change. They're used here to set pin numbers:
 const int buttonPinP1 = 3;     // the number of the pushbutton pin for player 1
 const int ledPinGreenP1 =  5;  // the number of the green LED pin for player 1
 const int ledPinRedP1 = 2;     // the number of the red LED pin for player 1
@@ -31,10 +6,9 @@ const int buttonPinP2 = 11;      // the number of the pushbutton pin for player 
 const int ledPinGreenP2=  10;    // the number of the green LED pin for player 2
 const int ledPinRedP2 = 13;      // the number of the red LED pin for player 2
 const int buzzPinP2 =  12;       // the number of the buzzer pin for player 2
-int player = 0;
 
-// variables will change:
-int buttonState = 0;         // variable for reading the pushbutton status
+int player = 0;
+bool secondChance = false;
 
 void setup() {
   // initialize the green LED player 1 pin as an output:
@@ -55,52 +29,66 @@ void setup() {
   pinMode(buzzPinP2, OUTPUT);
   //initialise serial connection
   Serial.begin(9600);
-  bool secondChance = false;
 }
 
 void loop() {
-//  if (Serial.available() > 0) {
-//    String command = Serial.readStringUntil('\n');
-//
-//    if (command == "answer_time") {
-//        // read the state of the pushbutton value:
-//        secondChance = true;
-//        player = waitForButtonPress();
-//        Serial.println(player);
-//    }
-//
-//    if (command.substring(0, command.indexOf(',')) == "win"){
-//      if(command.substring(command.indexOf(',') + 1) == "0"){
-//        playerWin(0);
-//      } else {
-//        playerWin(1);
-//      }
-//      
-//    }
-//
-//    if (command.substring(0, command.indexOf(',')) == "lose" and secondChance == true){
-//      if(command.substring(command.indexOf(',') + 1) == "0"){
-//        playerRetry(0);
-//      } else {
-//        playerRetry(1);
-//      }
-//      secondChance = false;
-//    }
-//
-//    if (command.substring(0, command.indexOf(',')) == "lose" and secondChance == false){
-//      if(command.substring(command.indexOf(',') + 1) == "0"){
-//        playersFail(0);
-//      } else {
-//        playersFail(1);
-//      }
-//    }
-//  }
-  player = waitForButtonPress();
-  delay(250);
-  playerRetry(0);
-  delay(250);
-  playerFail(0);
-  delay(2000);
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+
+    if (command == "answer_time") {
+        // read the state of the pushbutton value:
+        secondChance = true;
+        player = waitForButtonPress();
+        Serial.println(player);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+    }
+
+    if (command.substring(0, command.indexOf(',')) == "win"){
+      if(command.substring(command.indexOf(',') + 1) == "0"){
+        playerWin(0);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      } else {
+        playerWin(1);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      }
+      
+    }
+
+    if (command.substring(0, command.indexOf(',')) == "lose" && secondChance == true){
+      if(command.substring(command.indexOf(',') + 1) == "0"){
+        playerRetry(0);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      } else {
+        playerRetry(1);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      }
+      secondChance = false;
+    }
+
+    if (command.substring(0, command.indexOf(',')) == "lose" && secondChance == false){
+      if(command.substring(command.indexOf(',') + 1) == "0"){
+        playersFail(0);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      } else {
+        playersFail(1);
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      }
+    }
+  }
 }
 
 int waitForButtonPress() {
@@ -110,8 +98,6 @@ int waitForButtonPress() {
       digitalWrite(ledPinRedP1, HIGH);
       tone(buzzPinP1, 150, 500);
       delay(500);
-//      digitalWrite(ledPinRedP1, LOW);
-//      digitalWrite(ledPinGreenP1, LOW);
       return 0; // 0 = player 1
     }
     if (digitalRead(buttonPinP2) == HIGH) {
@@ -119,8 +105,6 @@ int waitForButtonPress() {
       digitalWrite(ledPinRedP2, HIGH);
       tone(buzzPinP2, 300, 500);
       delay(500);
-//      digitalWrite(ledPinGreenP2, LOW);
-//      digitalWrite(ledPinRedP2, LOW);
       return 1; // 1 = player 2
     }
   }
@@ -193,7 +177,7 @@ void playerRetry(int player) {
   }
 }
 
-void playerFail(int player) {
+void playersFail(int player) {
   if (player == 0){
       digitalWrite(ledPinGreenP1, LOW);
       delay(1500);
