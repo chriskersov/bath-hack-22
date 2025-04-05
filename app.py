@@ -142,6 +142,9 @@ def index():
 START_PAGE = "start.html"
 MAIN_PAGE = "show.html"
 END_PAGE = "win.html"
+
+DEFAULT_QUESTIONS = 5
+
 IMAGES = [
     "/images/Wordle.png",
     "/images/Wordle.png",
@@ -153,11 +156,11 @@ OPTIONS = [
     "IDK"
 ]
 
-@app.route("/PLACEHOLDER/Prepare/", methods=["GET"])
+@app.route("/PLACEHOLDER/Prepare/", methods = ["GET"])
 def start():
-    return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=5)
+    return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
 
-@app.route("/PLACEHOLDER/Gameshow/", methods=["GET", "POST"])
+@app.route("/PLACEHOLDER/Gameshow/", methods = ["GET, POST"])
 def showtime():
     return render_template(MAIN_PAGE)
 
