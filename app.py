@@ -24,11 +24,6 @@ START_PAGE = "start.html"
 MAIN_PAGE = "index.html"  # Using the actual HTML filename
 END_PAGE = "win.html"
 
-<<<<<<< Updated upstream
-
-
-=======
->>>>>>> Stashed changes
 DEFAULT_QUESTIONS = 5
 
 IMAGES = [
