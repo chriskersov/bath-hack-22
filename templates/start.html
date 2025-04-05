@@ -1,70 +1,88 @@
 <!DOCTYPE html>
 <html lang="en-UK">
-  <head>
-    <meta charset="UTF-8" />
-    <title>PLACEHOLDER</title>
-    <link rel="stylesheet" href="/static/styles.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  </head>
-  <body class="min-h-screen bg-gradient-to-br from-green-100 via-blue-100 to-purple-100 flex items-center justify-center">
-
-    <div class="flex-grow p-4">
-        <div class="w-full h-full bg-white rounded-xl shadow-lg p-8">
-            <h1 class="text-6xl font-semibold text-gray-700 mb-10 text-center">PLACEHOLDER TITLE</h1>
-            <form action="{{ url_for('showtime') }}" method="POST" id="option-form">
-              <div class="flex items-center justify-center gap-4">
-                  <h2 class="text-3xl font-semibold text-gray-700 mb-10 text-center">Choose your presenter!</h2>
-              </div>
-              <div class="flex justify-center gap-6 mb-10" id="image-options">
-                  {% for name, image in options %}
-                  <div class="text-center cursor-pointer border-4 rounded-xl transition
-                              {% if loop.first %} border-blue-500 bg-blue-50 {% endif %} hover:border-blue-300 " 
-                       onclick="selectImage(this, '{{ name }}')">
-                      <img src="{{ url_for('static', filename=image) }}" alt="{{ name }}" class="rounded-lg mb-2">
-                      <p class="text-gray-600 font-medium">{{ name }}</p>
-                  </div>
-                  {% endfor %}
-              </div>
-          
-              <input type="hidden" name="selected_option" id="selected_option" value="{{options[0][0]}}" required>
-          
-              <div class="flex items-center justify-center gap-4">
-                  <h2 class="text-3xl font-semibold text-gray-700 mb-10 text-center">How many questions?</h2>
-              </div>
-          
-              <div class="flex items-center justify-center gap-4 mb-10">
-                  <button type="button" onclick="updateCount(-1)" class="p-3 bg-gray-200 rounded-full hover:bg-gray-300 transition">
-                      <i class="fas fa-minus"></i>
-                  </button>
-                  <span id="counter" class="text-3xl font-semibold text-gray-700">{{ questions }}</span>
-                  <button type="button" onclick="updateCount(1)" class="p-3 bg-gray-200 rounded-full hover:bg-gray-300 transition">
-                      <i class="fas fa-plus"></i>
-                  </button>
-              </div>
-              <input type="hidden" name="counter_value" id="counter_value" value="{{ questions }}" required>
-          
-              <div class="text-center">
-                  <button type="submit" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-xl transition">Let's Go!</button>
-              </div>
-          </form>
+<head>
+  <meta charset="UTF-8">
+  <title>PLACEHOLDER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'baby-blue': '#A2D2FF',
+            'baby-blue-light': '#CEE5FF',
+            'baby-blue-dark': '#84B4E3',
+            'success': '#4CAF50',
+            'error': '#FF6B6B',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-sans text-gray-800 max-w-3xl mx-auto p-5 leading-relaxed bg-white">
+  <div class="rounded-xl shadow-lg overflow-hidden border border-baby-blue-light">
+    <div class="bg-baby-blue text-white p-5 text-center relative">
+      <h1 class="m-0 text-2xl font-semibold">Lecture Quiz Game</h1>
     </div>
+    
+    <div class="p-6">
+      <form action="{{ url_for('showtime') }}" method="POST" id="option-form">
+        <div class="text-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-700">Choose your presenter!</h2>
+        </div>
+        
+        <div class="flex justify-center gap-4 mb-8" id="image-options">
+          {% for name, image in options %}
+          <div class="text-center cursor-pointer border-4 rounded-xl transition
+                    {% if loop.first %} border-baby-blue bg-baby-blue-light {% endif %} hover:border-baby-blue-dark" 
+              onclick="selectImage(this, '{{ name }}')">
+            <img src="{{ url_for('static', filename=image) }}" alt="{{ name }}" class="rounded-lg mb-2">
+            <p class="text-gray-600 font-medium">{{ name }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        
+        <input type="hidden" name="selected_option" id="selected_option" value="{{options[0][0]}}" required>
+        
+        <div class="text-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-700">How many questions?</h2>
+        </div>
+        
+        <div class="flex items-center justify-center gap-4 mb-8">
+          <button type="button" onclick="updateCount(-1)" class="p-3 bg-baby-blue-light rounded-full hover:bg-baby-blue transition-all duration-200">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span id="counter" class="text-2xl font-semibold text-gray-700">{{ questions }}</span>
+          <button type="button" onclick="updateCount(1)" class="p-3 bg-baby-blue-light rounded-full hover:bg-baby-blue transition-all duration-200">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <input type="hidden" name="counter_value" id="counter_value" value="{{ questions }}" required>
+        
+        <div class="text-center">
+          <button type="submit" class="w-full px-5 py-3 bg-baby-blue text-white text-lg font-medium rounded-lg shadow-md hover:bg-baby-blue-dark hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 active:translate-y-0">Let's Go!</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    <script>
-     let count = {{ questions }}
-      function updateCount(num) {
-        count += num
-        document.getElementById('counter').textContent = count;
-        document.getElementById('counter_value').value = count;
-      }
+  <script>
+    let count = {{ questions }}
+    function updateCount(num) {
+      count += num
+      document.getElementById('counter').textContent = count;
+      document.getElementById('counter_value').value = count;
+    }
 
-      function selectImage(element, optionName) {
-        document.querySelectorAll('#image-options > div').forEach(div => {
-          div.classList.remove('border-blue-500', 'bg-blue-50');
-        });
-        element.classList.add('border-blue-500', 'bg-blue-50');
-        document.getElementById('selected_option').value = optionName;
-      }
-    </script>
-  </body>
+    function selectImage(element, optionName) {
+      document.querySelectorAll('#image-options > div').forEach(div => {
+        div.classList.remove('border-baby-blue', 'bg-baby-blue-light');
+      });
+      element.classList.add('border-baby-blue', 'bg-baby-blue-light');
+      document.getElementById('selected_option').value = optionName;
+    }
+  </script>
+</body>
 </html>
