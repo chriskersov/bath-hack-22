@@ -17,6 +17,24 @@ captions_text = ""
 processed_text = ""
 audio_transcription = ""
 
+START_PAGE = "start.html"
+MAIN_PAGE = "show.html"
+END_PAGE = "win.html"
+
+DEFAULT_QUESTIONS = 5
+
+IMAGES = [
+    "/images/Wordle.png",
+    "/images/Wordle.png",
+    "/images/Wordle.png"
+]
+
+OPTIONS = [
+    "Fabio",
+    "Guy A",
+    "IDK"
+]
+
 # Hardcoded API key and custom base URL (per hack.funandprofit.ai)
 openai.api_key = "qTPADyqTfVaamwCEIsRksDAZIhqdvvDweogu8p242iw6WZE0sk8C05jE2w3yGtIAbX88swUBsD2GHLaCdnVC14Dy2eYFluldpnK1Pvz8pyjZMXfdwPHcz6MD9HTySKSd"
 openai.api_base = "https://hack.funandprofit.ai/api/providers/openai/v1"
@@ -132,41 +150,21 @@ def api_status():
         "audio_transcription": audio_transcription
     })
 
-@app.route("/gameshow")
-def index():
-    return render_template("index.html")
-
-# ===============================
-# PLACEHOLDER / Gameshow Functionality
-# ===============================
-START_PAGE = "start.html"
-MAIN_PAGE = "show.html"
-END_PAGE = "win.html"
-
-DEFAULT_QUESTIONS = 5
-
-IMAGES = [
-    "/images/Wordle.png",
-    "/images/Wordle.png",
-    "/images/Wordle.png"
-]
-OPTIONS = [
-    "Fabio",
-    "Guy A",
-    "IDK"
-]
-
 @app.route("/PLACEHOLDER/Prepare/", methods = ["GET"])
 def start():
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
 
-# @app.route("/PLACEHOLDER/Gameshow/", methods = ["GET, POST"])
-# def showtime():
-#     return render_template(MAIN_PAGE)
+@app.route("/PLACEHOLDER/Gameshow/", methods = ["POST"])
+def showtime():
 
-@app.route("/PLACEHOLDER/Finale/", methods=["GET"])
+    questions = request.form['counter_value']
+    presenter = request.form['selected_option']
+
+    return render_template(MAIN_PAGE)
+
+@app.route("/PLACEHOLDER/Finale/", methods = ["GET"])
 def victory():
-    return render_template(END_PAGE)
+    render_template(END_PAGE)
 
 # ===============================
 # Run the Combined App
