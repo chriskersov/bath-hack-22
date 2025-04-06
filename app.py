@@ -56,12 +56,23 @@ def api_captions():
     print(num_questions_to_generate)
 
     # Use the global num_questions_to_generate
-    instructions = (
-        f"You are a gameshow host that will receive a lecture text. Your job is to read the lecture captions, understand them, "
-        f"and produce exactly {num_questions_to_generate} easy questions not multiple choice answers should be maximum 5 words, which are gameshow friendly meaning they are very short answers and very simple, based on the lecture with clear answers. "
-        f"Output your result as a JSON array where each element is an object with two keys: 'question' and 'answer'. "
-        f"Return only the JSON, without any additional text or markdown formatting."
-    )
+    instructions = f"""
+    You are a gameshow host.
+    You will be given a university lecture transcript.
+    Your task is to read and understand the content, then generate exactly {num_questions_to_generate} questions.
+
+    Each question must meet the following criteria:
+    1. It should be simple and based directly on the lecture.
+    2. The answer should be very short (maximum 5 words).
+    3. Do not use multiple choice format.
+    4. Questions should feel like they belong in a lighthearted gameshow — clear, direct, and easy to answer.
+
+    Return a JSON array of objects, each with the following fields:
+    - question (string): the generated question.
+    - answer (string): the correct short answer.
+
+    Only return the raw JSON — no additional text, formatting, or explanations.
+    """
 
     messages = [
         {"role": "system", "content": instructions},
@@ -130,27 +141,30 @@ def api_grade():
     question = data["question"]
     expected = data["expected_answer"]
     user_answer = data["user_answer"]
-    
-    prompt = (
-        f"Question: {question}\n"
-        f"Expected Answer: {expected}\n"
-        f"User Answer: {user_answer}\n\n"
-        "You are grading the user's answer against the expected answer. "
-        "Be lenient - they don't need to match exactly, just demonstrate understanding of the concept. "
-        "Start your response with EXACTLY ONE of these keywords: 'CORRECT:' or 'INCORRECT followed by the tiniest and most concise correct answer dont use uncesseary words' "
-        # "followed by a brief explanation. Make sure your response starts with one of these exact keywords."
-    )
-    
+
     try:
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": prompt}]
-        )
-        grade = completion.choices[0].message.content
+        model="gpt-3.5-turbo",
+        messages=[
+        {"role": "user", "content": 
+        f"""
+        Compare the user_input to the expected_answer.
+        Return a JSON object with the following fields:
+        1. correct (boolean): true if the user_input is acceptably correct, false otherwise.
+        2. feedback (string): a short natural language message to the user about their answer.
+
+        question: {question}
+        expected_answer: {expected}
+        user_input: {user_answer}
+        Be reasonably lenient with paraphrasing and wording differences as long as the core meaning is the same.
+        """
+        }])
+        content = completion.choices[0].message.content
+        print(content)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-    return jsonify({"grade": grade}), 200
+    return jsonify(content), 200
 
 @app.route("/api/status", methods=["GET"])
 def api_status():

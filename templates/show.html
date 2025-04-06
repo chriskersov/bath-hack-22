@@ -269,15 +269,15 @@
             })
           });
           const gradeResult = await gradeResponse.json();
-          if (gradeResult.grade) {
-            const gradeText = gradeResult.grade;
+          if (gradeResult.feedback) {
+            const gradeText = gradeResult.feedback;
             grades[currentQuestionIndex] = gradeText;
             
-            if (/\bINCORRECT\b/i.test(gradeText)) {
+            if (!gradeResult.correct) {
               gradeStatus.innerHTML = `<span class="font-semibold text-error">✗</span> ${gradeText}`;
               userAnswerEl.classList.remove("bg-baby-blue-light");
               userAnswerEl.classList.add("bg-red-50", "border-l-4", "border-error");
-            } else if (/\bCORRECT\b/i.test(gradeText)) {
+            } else if (gradeResult.correct) {
               gradeStatus.innerHTML = `<span class="font-semibold text-success">✓</span> ${gradeText}`;
               userAnswerEl.classList.remove("bg-baby-blue-light");
               userAnswerEl.classList.add("bg-green-50", "border-l-4", "border-success");
