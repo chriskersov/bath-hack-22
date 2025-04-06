@@ -3,8 +3,7 @@ import json
 import os
 
 # Your API key from ElevenLabs
-# XI_API_KEY = "sk_126113009e044ecc56802e72387fe7c334a655da873e31c4"
-XI_API_KEY = "X"
+XI_API_KEY = "sk_126113009e044ecc56802e72387fe7c334a655da873e31c4"
 
 # Your voice ID (this is the ID of the voice you've already cloned)
 VOICE_ID = "MLTKhOdgXNHiATUcJQTe"
