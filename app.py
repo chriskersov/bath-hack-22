@@ -53,6 +53,11 @@ def clean_json_response(text):
     cleaned = re.sub(r"```(json)?\n?", "", text).strip("` \n")
     return cleaned
 
+# Add a cleanup route to close the Arduino connection when the app shuts down
+@app.route("/WhoWantsToBeAGraduate/api/close_arduino", methods=["GET"])
+def close_arduino():
+    scta.close_connection()
+    return jsonify({"status": "Arduino connection closed"})
 @app.route("/WhoWantsToBeAGraduate/api/captions", methods=["POST"])
 def api_captions():
     global captions_text, processed_text, num_questions_to_generate
@@ -190,15 +195,51 @@ def api_grade():
     
     return jsonify(content), 200
 
-
+@app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET", "POST"])
+def activate_arduino():
+    if request.method == "GET":
+        # Use the Arduino to determine which player should answer
+        player = scta.get_answer()
+        
+        # If no player is returned, default to player 1
+        if player is None or player not in ["0", "1"]:
+            player = "0"
+            
+        # Convert string to int (0-indexed to 1-indexed)
+        player_num = int(player) + 1  # Convert "0" to 1 and "1" to 2
+        
+        # Update session
+        session["current_player"] = player_num
+        
+        return jsonify({"player": player_num})
+    
+    elif request.method == "POST":
+        data = request.get_json()
+        
+        correct = data.get("correct", False)
+        player = data.get("player", 1)
+        
+        # If answer is correct, update score for current player
+        if correct:
+            player_scores = session.get("player_scores", [0, 0])
+            player_scores[player-1] += 1
+            session["player_scores"] = player_scores
+            scta.rightAnswer(player-1)  # Convert 1-indexed to 0-indexed for Arduino
+        else:
+            scta.wrongAnswer(player-1)  # Convert 1-indexed to 0-indexed for Arduino
+        
+        return jsonify({
+            "success": True,
+            "player_scores": session.get("player_scores", [0, 0])
+        })
 
 
 @app.route("/WhoWantsToBeAGraduate/api/status", methods=["GET"])
 def api_status():
     global presenter_name
     return jsonify({
-        "current_player": session.get("current_player", 0),
-        "player_scores": session.get("player_scores", [0, 0])
+        "current_player": session.get("current_player", 1),
+        "player_scores": session.get("player_scores", [0, 0]),
         "processed_text": processed_text,
         "audio_transcription": audio_transcription,
         "presenter": presenter_name
@@ -221,29 +262,31 @@ def tts():
     else:
         return jsonify({"error": "Text-to-speech conversion failed"}), 500
     
-@app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET", "POST"])
-def activate_arduino():
+# @app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET", "POST"])
+# def activate_arduino():
 
-    if request.method == "GET":
-        return scta.get_answer()
+#     if request.method == "GET":
+#         return scta.get_answer()
     
-    elif request.method == "POST":
-        data = request.get_json()
+#     elif request.method == "POST":
+#         data = request.get_json()
 
-        correct = data["correct"]
-        player = data["player"]
+#         correct = data["correct"]
+#         player = data["player"]
 
-        if correct:
-            scta.rightAnswer(player)
-        else:
-            scta.wrongAnswer(player)
+#         if correct:
+#             scta.rightAnswer(player)
+#         else:
+#             scta.wrongAnswer(player)
 
 
 # Make the start page the default route
 @app.route("/", methods=["GET"])
 def index():
-    #generate_speech("Test")
+    # Connect to Arduino at app startup
     scta.connect_to_arduino()
+
+  
     return redirect(url_for("start"))
 
 @app.route("/WhoWantsToBeAGraduate/", methods=["GET"])

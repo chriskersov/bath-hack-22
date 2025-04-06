@@ -53,394 +53,627 @@
   </div>
   
   <script>
-    let questions = [];
-    let currentQuestionIndex = 0;
-    let userAnswers = [];
-    let grades = [];
-    let currentAudio = null; // Track current audio element
+let questions = [];
+let currentQuestionIndex = 0;
+let userAnswers = [];
+let grades = [];
+let currentAudio = null; // Track current audio element
+let currentPlayer = 1;
+let playerScores = [0, 0];
+let questionAttempts = 0; // Track attempts per question
+let playerAnswers = []; // Track which player answered each question
+
+// Function to call TTS endpoint and play audio automatically.
+async function playTTS(text, audioElementId) {
+  try {
+    // Stop any currently playing audio
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.remove();
+      currentAudio = null;
+    }
     
-    // Function to call TTS endpoint and play audio automatically.
-    async function playTTS(text, audioElementId) {
-      try {
-        // Stop any currently playing audio
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio.remove();
+    const response = await fetch("/WhoWantsToBeAGraduate/api/tts?text=" + encodeURIComponent(text));
+    const data = await response.json();
+    if (data.status === "success" && data.filename) {
+      const audioElem = document.createElement("audio");
+      audioElem.src = "/" + data.filename;
+      audioElem.style.display = "none";
+      document.body.appendChild(audioElem);
+      
+      // Store reference to current audio
+      currentAudio = audioElem;
+      
+      await audioElem.play();
+      
+      // Set up event listener to clean up after playing
+      audioElem.onended = () => {
+        if (audioElem.parentNode) {
+          audioElem.parentNode.removeChild(audioElem);
+        }
+        if (currentAudio === audioElem) {
           currentAudio = null;
         }
-        
-        const response = await fetch("/WhoWantsToBeAGraduate/api/tts?text=" + encodeURIComponent(text));
-        const data = await response.json();
-        if (data.status === "success" && data.filename) {
-          const audioElem = document.createElement("audio");
-          audioElem.src = "/" + data.filename;
-          audioElem.style.display = "none";
-          document.body.appendChild(audioElem);
-          
-          // Store reference to current audio
-          currentAudio = audioElem;
-          
-          await audioElem.play();
-          
-          // Set up event listener to clean up after playing
-          audioElem.onended = () => {
-            if (audioElem.parentNode) {
-              audioElem.parentNode.removeChild(audioElem);
-            }
-            if (currentAudio === audioElem) {
-              currentAudio = null;
-            }
-          };
-        } else {
-          console.error("Error generating TTS:", data.error);
-        }
-      } catch (error) {
-        console.error("Error fetching TTS endpoint:", error);
-      }
+      };
+    } else {
+      console.error("Error generating TTS:", data.error);
     }
+  } catch (error) {
+    console.error("Error fetching TTS endpoint:", error);
+  }
+}
+
+function createQuestionHTML(q, index) {
+  return `
+  <div class="flex p-6">
+    <!-- Video Placeholder (Left Side) -->
+    <div class="w-1/2 pr-4">
+      <div class="bg-gray-100 aspect-video flex items-center justify-center rounded-lg border-2 border-baby-blue">
+        <span class="text-gray-400">Video Feed</span>
+      </div>
+    </div>
     
-    function createQuestionHTML(q, index) {
-      return `
-      <div class="flex p-6">
-        <!-- Video Placeholder (Left Side) -->
-        <div class="w-1/2 pr-4">
-          <div class="bg-gray-100 aspect-video flex items-center justify-center rounded-lg border-2 border-baby-blue">
-            <span class="text-gray-400">Video Feed</span>
-          </div>
-        </div>
-        
-        <!-- Question Content (Right Side) -->
-        <div class="w-1/2 pl-4">
-          <div class="flex justify-between items-center mb-5">
-            <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
-            <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
-          </div>
-          
-          <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
-          
-          <!-- Hidden Interaction Elements -->
-          <div>
-            <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
-            <div class="flex items-center gap-2.5 my-5">
-              <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
-                Record Answer
-              </button>
-              <button id="stop-btn" class="px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
-                Stop
-              </button>
-              <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
-            </div>
-            <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
-              ${userAnswers[index] || ""}
-            </div>
-            <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
-              Check Answer
-            </button>
-          </div>
-          
-          <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
-          <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
-            Next Question
-          </button>
-        </div>
+    <!-- Question Content (Right Side) -->
+    <div class="w-1/2 pl-4">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
+        <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
       </div>
       
+      <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
       
+      <!-- Hidden Interaction Elements -->
+      <div>
+        <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
+        <div class="flex items-center gap-2.5 my-5">
+          <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
+            Record Answer (Auto-stops after 5s)
+          </button>
+          <button id="stop-btn" class="hidden px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
+            Stop
+          </button>
+          <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
+        </div>
+        <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
+          ${userAnswers[index] || ""}
+        </div>
+        <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
+          Check Answer
+        </button>
+      </div>
+      
+      <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
+      <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
+        Next Question
+      </button>
+       <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
+      <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
+        Next Question
+      </button>
+      
+      <!-- Add skip button here -->
+      <button id="skip-btn" class="mt-3 w-full px-5 py-3 text-base font-medium bg-gray-500 text-white rounded-lg">
+        Skip Question (No Points)
+      </button>
     </div>
-    `;
-    }
+  </div>
+  `;
+}
+
+async function getPlayer() {
+  try {
+    const response = await fetch("/WhoWantsToBeAGraduate/api/arduino");
+    const data = await response.json();
     
-    function showCurrentQuestion() {
-      if (questions.length === 0) return;
-      const container = document.getElementById("question-container");
-      container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
+    if (data && data.player) {
+      currentPlayer = data.player;
+      console.log(`Player ${currentPlayer} is answering this question`);
+      updatePlayerDisplay();
       
-      // Update progress bar
-      const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
-      document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
-      document.getElementById("progress-text").textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-      
-      initEventListeners();
-      
-      // Auto-play the question audio as soon as it is loaded.
-      const questionText = "Question " + (currentQuestionIndex + 1) + ": " + questions[currentQuestionIndex].question;
+      // Automatically start recording after player announcement
       setTimeout(() => {
-        playTTS(questionText);
-      }, 300);
-
-      getPlayer()
-
+        startRecordingWithTimeout();
+      }, 2000);
+    } else {
+      // Default to player 1 if no response
+      currentPlayer = 1;
+      updatePlayerDisplay();
+      startRecordingWithTimeout();
     }
+  } catch (error) {
+    console.error("Error getting player information:", error);
+    // Default to player 1 on error
+    currentPlayer = 1;
+    updatePlayerDisplay();
+    startRecordingWithTimeout();
+  }
+}
 
-    async function getPlayer() {
-      player = await fetch("/WhoWantsToBeAGraduate/api/arduino");
+function updatePlayerDisplay() {
+  // Remove highlight from all players
+  document.getElementById("player1-score").classList.remove("bg-yellow-200");
+  document.getElementById("player2-score").classList.remove("bg-yellow-200");
+  
+  // Highlight current player
+  document.getElementById(`player${currentPlayer}-score`).classList.add("bg-yellow-200");
+  
+  // Announce the current player
+  const playerAnnouncement = `Player ${currentPlayer}, please answer.`;
+  playTTS(playerAnnouncement);
+}
 
-      if (player) {
-        document.getElementById("record-btn").click();
+function startRecordingWithTimeout() {
+  // Find and click the record button
+  const recordBtn = document.getElementById("record-btn");
+  if (recordBtn) {
+    recordBtn.click();
+    
+    // Set a timeout to stop recording after 5 seconds
+    setTimeout(() => {
+      const stopBtn = document.getElementById("stop-btn");
+      if (stopBtn && !stopBtn.disabled) {
+        stopBtn.click();
+        
+        // Auto-grade after recording stops
+        setTimeout(() => {
+          const gradeBtn = document.getElementById("grade-btn");
+          if (gradeBtn && !gradeBtn.disabled) {
+            gradeBtn.click();
+          }
+        }, 2000); // Wait 2 seconds for transcription to complete
+      }
+    }, 5000); // 5 seconds recording time
+  }
+}
 
-        // WAIT FOR CONCLUSION
-        // EVALUATE ANSWER
-        // AWARD POINTS OR SWITCH TO OTHER USER AND REPEAT
-
-        if (player == 1) {
-          // More logic
-        } else {
-          // WEEP
-        }
-
+// Modified function to handle one pass per question
+async function sendAnswerResult(isCorrect) {
+  try {
+    // Track which player answered this question
+    if (!playerAnswers[currentQuestionIndex]) {
+      playerAnswers[currentQuestionIndex] = {
+        player1: currentPlayer === 1 ? {answered: true, correct: isCorrect} : {answered: false, correct: false},
+        player2: currentPlayer === 2 ? {answered: true, correct: isCorrect} : {answered: false, correct: false}
+      };
+    } else {
+      // Update the player who just answered
+      if (currentPlayer === 1) {
+        playerAnswers[currentQuestionIndex].player1 = {answered: true, correct: isCorrect};
+      } else {
+        playerAnswers[currentQuestionIndex].player2 = {answered: true, correct: isCorrect};
       }
     }
     
-    function initEventListeners() {
-      const recordBtn = document.getElementById("record-btn");
-      const stopBtn = document.getElementById("stop-btn");
-      const recordStatus = document.getElementById("record-status");
-      const userAnswerEl = document.getElementById("user-answer");
-      const gradeBtn = document.getElementById("grade-btn");
-      const gradeStatus = document.getElementById("grade-status");
-      const nextBtn = document.getElementById("next-btn");
+    const response = await fetch("/WhoWantsToBeAGraduate/api/arduino", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        player: currentPlayer,
+        correct: isCorrect
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      playerScores = result.player_scores;
       
-      let mediaRecorder;
-      let audioChunks = [];
-      let stream;
+      // Update score display
+      document.getElementById("player1-score").textContent = `P1: ${playerScores[0]}`;
+      document.getElementById("player2-score").textContent = `P2: ${playerScores[1]}`;
       
-      function getPreferredMimeType() {
-        if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
-          return 'audio/webm; codecs=opus';
-        } else if (MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')) {
-          return 'audio/ogg; codecs=opus';
+      if (isCorrect) {
+        // Player got it right
+        playTTS(`Correct! Player ${currentPlayer} gets a point.`);
+        
+        // Auto-advance after 5 seconds instead of showing next button
+        setTimeout(() => {
+          moveToNextQuestion();
+        }, 5000);
+      } else {
+        // Player got it wrong
+        questionAttempts++;
+        
+        if (questionAttempts === 1) {
+          // First attempt was wrong, pass to the other player
+          playTTS(`Incorrect! Passing to Player ${currentPlayer === 1 ? 2 : 1}.`);
+          
+          // Switch to the other player
+          currentPlayer = currentPlayer === 1 ? 2 : 1;
+          
+          // Update player display
+          updatePlayerDisplay();
+          
+          // Wait a moment for the announcement, then start recording for the new player
+          setTimeout(() => {
+            // Reset the UI for the new player's answer
+            const userAnswerEl = document.getElementById("user-answer");
+            if (userAnswerEl) {
+              userAnswerEl.textContent = "";
+              userAnswerEl.classList.remove("bg-red-50", "border-l-4", "border-error");
+              userAnswerEl.classList.remove("bg-green-50", "border-l-4", "border-success");
+              userAnswerEl.classList.add("bg-baby-blue-light");
+            }
+            
+            // Reset grade status
+            const gradeStatus = document.getElementById("grade-status");
+            if (gradeStatus) gradeStatus.textContent = "";
+            
+            // Enable record button
+            const recordBtn = document.getElementById("record-btn");
+            if (recordBtn) recordBtn.disabled = false;
+            
+            // Start recording automatically
+            startRecordingWithTimeout();
+          }, 2000);
         } else {
-          return 'audio/webm';
+          // Both players have attempted and failed
+          playTTS(`Incorrect! Moving to the next question.`);
+          
+          // Auto-advance after 5 seconds
+          setTimeout(() => {
+            moveToNextQuestion();
+          }, 5000);
         }
       }
-      
-      // Prevent re-recording if answer exists.
-      if (userAnswers[currentQuestionIndex]) {
-        recordBtn.disabled = true;
+    }
+  } catch (error) {
+    console.error("Error sending answer result:", error);
+  }  
+}
+
+// Add this helper function to handle moving to the next question
+function moveToNextQuestion() {
+  currentQuestionIndex++;
+  if (currentQuestionIndex < questions.length) {
+    // Reset attempts counter and userAnswers for this question
+    questionAttempts = 0;
+    if (!userAnswers[currentQuestionIndex]) {
+      userAnswers[currentQuestionIndex] = "";
+    }
+    showCurrentQuestion();
+  } else {
+    showSummary();
+  }
+}
+
+function showCurrentQuestion() {
+  if (questions.length === 0) return;
+  questionAttempts = 0; // Reset attempts for new question
+  
+  const container = document.getElementById("question-container");
+  container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
+  
+  // Update progress bar
+  const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+  document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
+  document.getElementById("progress-text").textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+  
+  initEventListeners();
+  
+  // Auto-play the question audio as soon as it is loaded.
+  const questionText = "Question " + (currentQuestionIndex + 1) + ": " + questions[currentQuestionIndex].question;
+  setTimeout(() => {
+    playTTS(questionText);
+  }, 300);
+  
+  // Get current player after question is loaded
+  setTimeout(() => {
+    getPlayer();
+  }, 1000);
+}
+
+function initEventListeners() {
+  const recordBtn = document.getElementById("record-btn");
+  const stopBtn = document.getElementById("stop-btn");
+  const recordStatus = document.getElementById("record-status");
+  const userAnswerEl = document.getElementById("user-answer");
+  const gradeBtn = document.getElementById("grade-btn");
+  const gradeStatus = document.getElementById("grade-status");
+  const nextBtn = document.getElementById("next-btn");
+  const skipBtn = document.getElementById("skip-btn"); 
+  
+  let mediaRecorder;
+  let audioChunks = [];
+  let stream;
+  
+  function getPreferredMimeType() {
+    if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
+      return 'audio/webm; codecs=opus';
+    } else if (MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')) {
+      return 'audio/ogg; codecs=opus';
+    } else {
+      return 'audio/webm';
+    }
+  }
+  
+  // Prevent re-recording if answer exists.
+  if (userAnswers[currentQuestionIndex]) {
+    recordBtn.disabled = true;
+  }
+  
+  skipBtn.addEventListener('click', () => {
+    // Stop any currently playing audio
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.remove();
+      currentAudio = null;
+    }
+    
+    playTTS("Question skipped. No points awarded.");
+    
+    setTimeout(() => {
+      moveToNextQuestion();
+    }, 2000);
+  });
+
+  recordBtn.addEventListener('click', async () => {
+    try {
+      // Stop any currently playing audio when recording starts
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.remove();
+        currentAudio = null;
       }
       
-      recordBtn.addEventListener('click', async () => {
+      audioChunks = [];
+      recordStatus.textContent = "Initializing microphone...";
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const chosenType = getPreferredMimeType();
+      mediaRecorder = new MediaRecorder(stream, { mimeType: chosenType });
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunks.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstart = () => {
+        recordStatus.textContent = "Recording...";
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+        recordBtn.classList.add("bg-red-500");
+        recordBtn.classList.remove("bg-pink-300");
+      };
+      
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        stopBtn.disabled = true;
+        recordStatus.textContent = "Processing audio...";
+        recordBtn.classList.remove("bg-red-500");
+        recordBtn.classList.add("bg-pink-300");
+        const audioBlob = new Blob(audioChunks, { type: chosenType });
+        let extension = 'webm';
+        if (chosenType.includes('ogg')) {
+          extension = 'ogg';
+        }
+        const formData = new FormData();
+        formData.append("audio", audioBlob, `recording.${extension}`);
         try {
-          // Stop any currently playing audio when recording starts
-          if (currentAudio) {
-            currentAudio.pause();
-            currentAudio.remove();
-            currentAudio = null;
+          const response = await fetch("/WhoWantsToBeAGraduate/api/transcribe", { method: "POST", body: formData });
+          const result = await response.json();
+          if (result.audio_transcription) {
+            userAnswerEl.textContent = result.audio_transcription;
+            userAnswers[currentQuestionIndex] = result.audio_transcription;
+            recordStatus.textContent = "Recording complete.";
+            gradeBtn.disabled = false;
+          } else {
+            recordStatus.textContent = "Error transcribing audio.";
           }
-          
-          audioChunks = [];
-          recordStatus.textContent = "Initializing microphone...";
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          const chosenType = getPreferredMimeType();
-          mediaRecorder = new MediaRecorder(stream, { mimeType: chosenType });
-          
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) {
-              audioChunks.push(e.data);
-            }
-          };
-          
-          mediaRecorder.onstart = () => {
-            recordStatus.textContent = "Recording...";
-            recordBtn.disabled = true;
-            stopBtn.disabled = false;
-            recordBtn.classList.add("bg-red-500");
-            recordBtn.classList.remove("bg-pink-300");
-          };
-          
-          mediaRecorder.onstop = async () => {
-            stream.getTracks().forEach(track => track.stop());
-            stopBtn.disabled = true;
-            recordStatus.textContent = "Processing audio...";
-            recordBtn.classList.remove("bg-red-500");
-            recordBtn.classList.add("bg-pink-300");
-            const audioBlob = new Blob(audioChunks, { type: chosenType });
-            let extension = 'webm';
-            if (chosenType.includes('ogg')) {
-              extension = 'ogg';
-            }
-            const formData = new FormData();
-            formData.append("audio", audioBlob, `recording.${extension}`);
-            try {
-              const response = await fetch("/WhoWantsToBeAGraduate/api/transcribe", { method: "POST", body: formData });
-              const result = await response.json();
-              if (result.audio_transcription) {
-                userAnswerEl.textContent = result.audio_transcription;
-                userAnswers[currentQuestionIndex] = result.audio_transcription;
-                recordStatus.textContent = "Recording complete.";
-                gradeBtn.disabled = false;
-              } else {
-                recordStatus.textContent = "Error transcribing audio.";
-              }
-            } catch (error) {
-              recordStatus.textContent = "Error: " + error.message;
-            }
-          };
-          mediaRecorder.start();
         } catch (error) {
           recordStatus.textContent = "Error: " + error.message;
         }
-      });
-      
-      stopBtn.addEventListener('click', () => {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-          mediaRecorder.stop();
-        }
-      });
-      
-      gradeBtn.addEventListener('click', async () => {
-        // Stop any currently playing audio first
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio.remove();
-          currentAudio = null;
-        }
-        
-        const questionText = questions[currentQuestionIndex].question;
-        const expectedAnswer = questions[currentQuestionIndex].answer;
-        const userAnswer = userAnswerEl.textContent;
-        gradeStatus.textContent = "Grading answer...";
-        gradeBtn.disabled = true;
-        
-        try {
-          const gradeResponse = await fetch("/WhoWantsToBeAGraduate/api/grade", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              question: questionText,
-              expected_answer: expectedAnswer,
-              user_answer: userAnswer
-            })
-          });
-          const gradeResultPre = await gradeResponse.json();
-          const gradeResult = JSON.parse(gradeResultPre)
-          if (gradeResult.feedback) {
-            const gradeText = gradeResult.feedback;
-            grades[currentQuestionIndex] = gradeResult.correct;
-            
-            if (!gradeResult.correct) {
-              gradeStatus.innerHTML = `<span class="font-semibold text-error">✗</span> ${gradeText}`;
-              userAnswerEl.classList.remove("bg-baby-blue-light");
-              userAnswerEl.classList.add("bg-red-50", "border-l-4", "border-error");
-            } else if (gradeResult.correct) {
-              gradeStatus.innerHTML = `<span class="font-semibold text-success">✓</span> ${gradeText}`;
-              userAnswerEl.classList.remove("bg-baby-blue-light");
-              userAnswerEl.classList.add("bg-green-50", "border-l-4", "border-success");
-            } else {
-              gradeStatus.textContent = gradeText;
-            }
-            
-            // Speak ONLY the correct answer, not the grade
-            setTimeout(() => {
-              playTTS(gradeText, "grade-audio");
-            }, 100);
-            
-            nextBtn.classList.remove("hidden");
-          } else {
-            gradeStatus.textContent = "Error grading answer.";
-          }
-        } catch (error) {
-          gradeStatus.textContent = "Error: " + error.message;
-        }
-      });
-      
-      nextBtn.addEventListener('click', () => {
-        // Stop any currently playing audio when moving to next question
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio.remove();
-          currentAudio = null;
-        }
-        
-        currentQuestionIndex++;
-        if (currentQuestionIndex < questions.length) {
-          showCurrentQuestion();
-        } else {
-          showSummary();
-        }
-      });
+      };
+      mediaRecorder.start();
+    } catch (error) {
+      recordStatus.textContent = "Error: " + error.message;
+    }
+  });
+  
+  stopBtn.addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+    }
+  });
+  
+  gradeBtn.addEventListener('click', async () => {
+    // Stop any currently playing audio first
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.remove();
+      currentAudio = null;
     }
     
-    function showSummary() {
-      document.getElementById("question-container").style.display = "none";
-      const summaryContainer = document.getElementById("summary-container");
-      const summaryContent = document.getElementById("summary-content");
-      const overallScoreEl = document.getElementById("overall-score");
-      let summaryHTML = "";
-      
-      let correctCount = 0;
-      let incorrectCount = 0;
-      
-      questions.forEach((q, index) => {
-
-        let isCorrect = grades[index]
-        
-        if (isCorrect) {
-          correctCount++;
-        } else {
-          incorrectCount++;
-        }
-        
-        let safeQuestion = q.question.replace(/"/g, "'");
-        let safeAnswer = q.answer.replace(/"/g, "'");
-        
-        summaryHTML += `
-          <div class="bg-baby-blue-light p-5 rounded-lg mb-4">
-            <h3 class="text-lg font-semibold mb-2">Question ${index + 1}</h3>
-            <p class="mb-2"><strong>Question:</strong> ${q.question}</p>
-            <p class="mb-2"><strong>Expected Answer:</strong> ${q.answer}</p>
-            <p class="mb-2"><strong>Your Answer:</strong> ${userAnswers[index] || "No answer provided"}</p>
-            <p><strong>Result:</strong> <span class="${isCorrect ? "text-success font-semibold" : "text-error font-semibold"}">${isCorrect ? "Correct" : "Incorrect"}</span></p>
-            <p><button class="px-4 py-2 bg-indigo-500 text-white rounded mt-2 hover:bg-indigo-600 transition-colors" onclick="playTTS('Question: ${safeQuestion}. Answer: ${safeAnswer}')">Play Q&amp;A</button></p>
-          </div>
-        `;
-      });
-      
-      summaryContent.innerHTML = summaryHTML;
-      
-      const totalQuestions = questions.length;
-      const score = Math.round((correctCount / totalQuestions) * 100);
-      
-      overallScoreEl.innerHTML = `
-        <h3 class="text-xl font-semibold mb-2">Your Score: ${score}%</h3>
-        <p>Correct: ${correctCount} | Incorrect: ${incorrectCount}</p>
-      `;
-      
-      document.getElementById("progress-bar").style.width = "100%";
-      document.getElementById("progress-text").textContent = "Quiz Complete!";
-      
-      summaryContainer.style.display = "block";
-      
-      document.getElementById("restart-btn").addEventListener("click", () => {
-        window.location.href = "/";
-      });
-    }
+    const questionText = questions[currentQuestionIndex].question;
+    const expectedAnswer = questions[currentQuestionIndex].answer;
+    const userAnswer = userAnswerEl.textContent;
+    gradeStatus.textContent = "Grading answer...";
+    gradeBtn.disabled = true;
     
-    // Poll for status updates every 3 seconds until questions are loaded
-    let statusInterval = setInterval(async () => {
-      try {
-        const response = await fetch("/WhoWantsToBeAGraduate/api/status");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.processed_text && data.processed_text.trim() !== "") {
-            try {
-              questions = JSON.parse(data.processed_text);
-              if (document.getElementById("no-questions")) {
-                clearInterval(statusInterval);
-                userAnswers = new Array(questions.length).fill("");
-                grades = new Array(questions.length).fill("");
-                document.getElementById("question-container").innerHTML = "";
-                showCurrentQuestion();
-              }
-            } catch (e) {
-              console.error("Error parsing processed_text as JSON:", e);
-            }
-          }
+    try {
+      const gradeResponse = await fetch("/WhoWantsToBeAGraduate/api/grade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: questionText,
+          expected_answer: expectedAnswer,
+          user_answer: userAnswer
+        })
+      });
+      const gradeResultPre = await gradeResponse.json();
+      const gradeResult = JSON.parse(gradeResultPre);
+      if (gradeResult.feedback) {
+        const gradeText = gradeResult.feedback;
+        grades[currentQuestionIndex] = gradeResult.correct;
+        
+        // Update UI based on result
+        if (!gradeResult.correct) {
+          gradeStatus.innerHTML = `<span class="font-semibold text-error">✗</span> ${gradeText}`;
+          userAnswerEl.classList.remove("bg-baby-blue-light");
+          userAnswerEl.classList.add("bg-red-50", "border-l-4", "border-error");
+        } else if (gradeResult.correct) {
+          gradeStatus.innerHTML = `<span class="font-semibold text-success">✓</span> ${gradeText}`;
+          userAnswerEl.classList.remove("bg-baby-blue-light");
+          userAnswerEl.classList.add("bg-green-50", "border-l-4", "border-success");
+        } else {
+          gradeStatus.textContent = gradeText;
         }
-      } catch (error) {
-        console.error("Error fetching status:", error);
+        
+        // Send the result to handle player changes
+        sendAnswerResult(gradeResult.correct);
+        
+        // Speak the grade feedback
+        setTimeout(() => {
+          playTTS(gradeText, "grade-audio");
+        }, 100);
+      } else {
+        gradeStatus.textContent = "Error grading answer.";
       }
-    }, 3000);
+    } catch (error) {
+      gradeStatus.textContent = "Error: " + error.message;
+    }
+  });
+  
+  nextBtn.addEventListener('click', () => {
+    // Stop any currently playing audio when moving to next question
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.remove();
+      currentAudio = null;
+    }
+    
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+      // Reset attempts counter and userAnswers for this question
+      questionAttempts = 0;
+      if (!userAnswers[currentQuestionIndex]) {
+        userAnswers[currentQuestionIndex] = "";
+      }
+      showCurrentQuestion();
+    } else {
+      showSummary();
+    }
+  });
+}
+
+function showSummary() {
+  document.getElementById("question-container").style.display = "none";
+  const summaryContainer = document.getElementById("summary-container");
+  const summaryContent = document.getElementById("summary-content");
+  const overallScoreEl = document.getElementById("overall-score");
+  let summaryHTML = "";
+  
+  // Player summary section
+  summaryHTML += `
+    <div class="bg-baby-blue p-5 rounded-lg mb-6">
+      <h3 class="text-xl font-semibold mb-3 text-white">Player Results</h3>
+      <div class="flex justify-between bg-white p-4 rounded-lg mb-3">
+        <div class="text-center w-1/2 border-r border-gray-200">
+          <h4 class="font-bold text-lg">Player 1</h4>
+          <p class="text-2xl font-bold my-2">${playerScores[0]} points</p>
+          <p class="text-gray-600">Winner: ${playerScores[0] > playerScores[1] ? "Yes! 🏆" : "No"}</p>
+        </div>
+        <div class="text-center w-1/2">
+          <h4 class="font-bold text-lg">Player 2</h4>
+          <p class="text-2xl font-bold my-2">${playerScores[1]} points</p>
+          <p class="text-gray-600">Winner: ${playerScores[1] > playerScores[0] ? "Yes! 🏆" : (playerScores[0] === playerScores[1] ? "Tie!" : "No")}</p>
+        </div>
+      </div>
+    </div>
+    <h3 class="text-xl font-semibold mb-4">Question Summary</h3>
+  `;
+  
+  let correctCount = 0;
+  let incorrectCount = 0;
+  
+  questions.forEach((q, index) => {
+    let isCorrect = grades[index];
+    
+    if (isCorrect) {
+      correctCount++;
+    } else {
+      incorrectCount++;
+    }
+    
+    let safeQuestion = q.question.replace(/"/g, "'");
+    let safeAnswer = q.answer.replace(/"/g, "'");
+    
+    // Determine which player answered correctly, if any
+    let player1Status = playerAnswers[index] && playerAnswers[index].player1.answered ? 
+      (playerAnswers[index].player1.correct ? "Correct ✓" : "Incorrect ✗") : "Did not answer";
+    
+    let player2Status = playerAnswers[index] && playerAnswers[index].player2.answered ? 
+      (playerAnswers[index].player2.correct ? "Correct ✓" : "Incorrect ✗") : "Did not answer";
+    
+    summaryHTML += `
+      <div class="bg-baby-blue-light p-5 rounded-lg mb-4">
+        <h3 class="text-lg font-semibold mb-2">Question ${index + 1}</h3>
+        <p class="mb-2"><strong>Question:</strong> ${q.question}</p>
+        <p class="mb-2"><strong>Expected Answer:</strong> ${q.answer}</p>
+        <div class="grid grid-cols-2 gap-4 my-3 bg-white p-3 rounded">
+          <div class="border-r border-gray-200 pr-2">
+            <p><strong>Player 1:</strong> ${player1Status}</p>
+          </div>
+          <div class="pl-2">
+            <p><strong>Player 2:</strong> ${player2Status}</p>
+          </div>
+        </div>
+        <p class="mb-2"><strong>Transcribed Answer:</strong> ${userAnswers[index] || "No answer provided"}</p>
+        <p><button class="px-4 py-2 bg-indigo-500 text-white rounded mt-2 hover:bg-indigo-600 transition-colors" onclick="playTTS('Question: ${safeQuestion}. Answer: ${safeAnswer}')">Play Q&amp;A</button></p>
+      </div>
+    `;
+  });
+  
+  summaryContent.innerHTML = summaryHTML;
+  
+  const totalQuestions = questions.length;
+  const score = Math.round((correctCount / totalQuestions) * 100);
+  
+  overallScoreEl.innerHTML = `
+    <h3 class="text-xl font-semibold mb-2">Game Summary</h3>
+    <p class="mb-1">Total Questions: ${totalQuestions}</p>
+    <p class="mb-1">Correct Answers: ${correctCount}</p>
+    <p class="mb-3">Incorrect Answers: ${incorrectCount}</p>
+    <div class="mt-3 pt-3 border-t border-white border-opacity-30">
+      <p class="text-xl font-bold">${playerScores[0] > playerScores[1] ? "Player 1 Wins!" : (playerScores[1] > playerScores[0] ? "Player 2 Wins!" : "It's a tie!")}</p>
+    </div>
+  `;
+  
+  document.getElementById("progress-bar").style.width = "100%";
+  document.getElementById("progress-text").textContent = "Quiz Complete!";
+  
+  summaryContainer.style.display = "block";
+  
+  document.getElementById("restart-btn").addEventListener("click", () => {
+    window.location.href = "/";
+  });
+}
+
+// Poll for status updates every 3 seconds until questions are loaded
+let statusInterval = setInterval(async () => {
+  try {
+    const response = await fetch("/WhoWantsToBeAGraduate/api/status");
+    if (response.ok) {
+      const data = await response.json();
+      if (data.processed_text && data.processed_text.trim() !== "") {
+        try {
+          questions = JSON.parse(data.processed_text);
+          if (document.getElementById("no-questions")) {
+            clearInterval(statusInterval);
+            userAnswers = new Array(questions.length).fill("");
+            grades = new Array(questions.length).fill("");
+            playerAnswers = new Array(questions.length).fill(null);
+            document.getElementById("question-container").innerHTML = "";
+            showCurrentQuestion();
+          }
+        } catch (e) {
+          console.error("Error parsing processed_text as JSON:", e);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching status:", error);
+  }
+}, 3000);
   </script>
 </body>
 </html>
