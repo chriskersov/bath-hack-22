@@ -1,0 +1,45 @@
+
+    <div class="flex p-6">
+      <!-- Video Placeholder (Left Side) -->
+      <div class="w-1/2 pr-4">
+        <div class="bg-gray-100 aspect-video flex items-center justify-center rounded-lg border-2 border-baby-blue">
+          <span class="text-gray-400">Video Feed</span>
+        </div>
+      </div>
+      
+      <!-- Question Content (Right Side) -->
+      <div class="w-1/2 pl-4">
+        <div class="flex justify-between items-center mb-5">
+          <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
+          <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
+        </div>
+        
+        <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
+        
+        <!-- Hidden Interaction Elements -->
+        <div class="hidden">
+          <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
+          <div class="flex items-center gap-2.5 my-5">
+            <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
+              Record Answer
+            </button>
+            <button id="stop-btn" class="px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
+              Stop
+            </button>
+            <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
+          </div>
+          <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
+            ${userAnswers[index] || ""}
+          </div>
+          <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
+            Check Answer
+          </button>
+        </div>
+        
+        <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
+        <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
+          Next Question
+        </button>
+      </div>
+    </div>
+    `;

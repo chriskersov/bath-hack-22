@@ -6,6 +6,7 @@ import json
 import re
 import time
 from services.voice_read import generate_speech
+import SerialConnectionToArduino as scta
 
 app = Flask(__name__)
 app.secret_key = "quiz_game_secret_key"  # Needed for session
@@ -210,10 +211,23 @@ def tts():
     else:
         return jsonify({"error": "Text-to-speech conversion failed"}), 500
     
-@app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET"])
+@app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET", "POST"])
 def activate_arduino():
-    time.sleep(3)
-    return "hello"
+
+    if request.method == "GET":
+        return scta.get_answer()
+    
+    elif request.method == "POST":
+        data = request.get_json()
+
+        correct = data["correct"]
+        player = data["player"]
+
+        if correct:
+            scta.rightAnswer(player)
+        else:
+            scta.wrongAnswer(player)
+
 
 # Make the start page the default route
 @app.route("/", methods=["GET"])
