@@ -16,8 +16,8 @@ def get_answer():
         if arduino.in_waiting > 0:
             data = arduino.readline().decode().strip()
             return data
-        else:
-            return "error, no response from Arduino"
+    
+    return "error, no response from Arduino"
 
 def rightAnswer(player):
     arduino.reset_input_buffer()
