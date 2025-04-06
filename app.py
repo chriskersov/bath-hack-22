@@ -267,7 +267,7 @@ def showtime():
     global processed_text
     processed_text = ""
     
-    return render_template("show.html", background=BACKGROUND, intro=url_for("static", filename="video/fabio_test_talking.mp4"))
+    return render_template("show.html", background=BACKGROUND, intro=url_for("static", filename="video/fabio_intro.mp4"))
 
 @app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():

@@ -8,7 +8,7 @@ def connect_to_arduino():
     
     if arduino is None or not arduino.is_open:
         
-        arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
+        # arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
         time.sleep(2)  # Give time to reset
         print("inside")
     else:
