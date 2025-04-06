@@ -99,29 +99,25 @@
       }
     }
     
-    function createQuestionHTML(q, index) {
+    function createQuestionHTML(q, index, video) {
       return `
 <div class="p-6">
-    <!-- Video Playback Button (Only shown when video exists) -->
-    ${q.video ? `
-    <div class="mb-6 text-center">
-      <button id="play-video-btn" class="px-5 py-3 bg-baby-blue text-white rounded-lg hover:bg-baby-blue-dark transition-colors">
-        <i class="fas fa-play mr-2"></i> Play Video
-      </button>
-    </div>
-    ` : ''}
+
+    <video class="flex justify-between items-center mb-5", autoplay controls onended="this.style.display='none'">
+      <source src="{{ intro }}" type="video/mp4">
+    </video>
     
     <!-- Question Content -->
-    <div class="flex justify-between items-center mb-5", id="question-box">
+    <div class="flex justify-between items-center mb-5" hidden id="question-box">
       <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
       <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
       <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
+      <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
     </div>
     
     
     <!-- Hidden Interaction Elements -->
     <div>
-      <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
       <div class="flex items-center gap-2.5 my-5">
         <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
           Record Answer
@@ -172,16 +168,16 @@
     async function getPlayer() {
       player = await fetch("/WhoWantsToBeAGraduate/api/arduino");
 
-      if (player) {
-        document.getElementById("record-btn").click();
+      // if (player) {
+      //   document.getElementById("record-btn").click();
 
         // WAIT FOR CONCLUSION
         // EVALUATE ANSWER
         // AWARD POINTS OR SWITCH TO OTHER USER AND REPEAT
 
-        if (player == 1) {
-          // More logic
-        } else {
+        // if (player == 1) {
+        //   // More logic
+        // } else {
           // WEEP
         }
 
@@ -439,34 +435,10 @@
         console.error("Error fetching status:", error);
       }
     }, 3000);
-  // Add these variables to your existing script
-  let videoPlayer = null;
-  let isVideoPlaying = false;
-
-  // Add this function to your existing script
-  function replaceQuestionWithVideo(name) {
-    const appleDiv = document.getElementById("question-box");
-
-    // Hide the apple div
-    if (appleDiv) appleDiv.style.display = "none";
-
-    // Create video element
-    const video = document.createElement("video");
-    video.src = name; // Replace with your actual video source
-    video.autoplay = true;
-    video.controls = false;
-    video.muted = true; // Required for autoplay on most browsers
-    video.style.width = "100%";
-
-    // Insert video after the apple div
-    appleDiv.parentNode.insertBefore(video, appleDiv.nextSibling);
-
-    // When video ends
-    video.addEventListener("ended", () => {
-        video.remove();                  // Remove the video
-        if (appleDiv) appleDiv.style.display = "block"; // Show the div again
-    });
-}
+    function endVideo(self) {
+      self.style.display = "none"
+      document.getElementById("question-box").hidden = "false"
+    }
   </script>
 </body>
 </html>
