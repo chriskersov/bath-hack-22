@@ -17,7 +17,7 @@ def get_answer():
             data = arduino.readline().decode().strip()
             return data
     
-    return "error, no response from Arduino"
+    return None
 
 def rightAnswer(player):
     arduino.reset_input_buffer()
@@ -26,8 +26,6 @@ def rightAnswer(player):
     time.sleep(0.2)
 
 def wrongAnswer(player):
-    player = int(player)
-    player = (player + 1) % 2
     arduino.reset_input_buffer()
     arduino.write(f'lose,{player}\n'.encode())  # Encode properly
     time.sleep(0.2)

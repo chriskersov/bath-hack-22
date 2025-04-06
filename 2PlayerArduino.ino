@@ -61,7 +61,7 @@ void loop() {
     }
 
     if (command.substring(0, command.indexOf(',')) == "lose" && secondChance == true){
-      if(command.substring(command.indexOf(',') + 1) == "0"){
+      if(command.substring(command.indexOf(',') + 1) == "1"){
         playerRetry(0);
         while (Serial.available() > 0) {
           Serial.read();
@@ -89,6 +89,8 @@ void loop() {
       }
     }
   }
+//  player = waitForButtonPress();
+//  playerWin(player);
 }
 
 int waitForButtonPress() {
