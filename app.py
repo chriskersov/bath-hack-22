@@ -207,6 +207,10 @@ def tts():
         return jsonify({"status": "success", "filename": output_filename}), 200
     else:
         return jsonify({"error": "Text-to-speech conversion failed"}), 500
+    
+@app.route("/api/arduino", methods=["GET"])
+def get_arduino():
+    pass
 
 @app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():
