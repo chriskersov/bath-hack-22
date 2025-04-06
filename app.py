@@ -190,10 +190,15 @@ def api_grade():
     
     return jsonify(content), 200
 
+
+
+
 @app.route("/WhoWantsToBeAGraduate/api/status", methods=["GET"])
 def api_status():
     global presenter_name
     return jsonify({
+        "current_player": session.get("current_player", 0),
+        "player_scores": session.get("player_scores", [0, 0])
         "processed_text": processed_text,
         "audio_transcription": audio_transcription,
         "presenter": presenter_name
@@ -243,6 +248,8 @@ def index():
 
 @app.route("/WhoWantsToBeAGraduate/", methods=["GET"])
 def start():
+    session["current_player"] = 0
+    session["player_scores"] = [0, 0]
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS, background=BACKGROUND)
 
 @app.route("/WhoWantsToBeAGraduate/Gameshow", methods=["POST"])
