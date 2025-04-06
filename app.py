@@ -152,10 +152,12 @@ def api_grade():
     expected = data["expected_answer"]
     user_answer = data["user_answer"]
 
-    if data["first"]:
-        subprompt = "Be careful not to hint too much as to reveal the answer"
-    else:
-        subprompt = "Make sure to reveal what the answer was."
+    # if data["first"]:
+    #     subprompt = "Be careful not to hint too much as to reveal the answer"
+    # else:
+    #     subprompt = "Make sure to reveal what the answer was."
+
+    subprompt = ""
 
     prompt = f"""
     You are an AI quiz grader.
@@ -238,7 +240,7 @@ def activate_arduino():
 @app.route("/", methods=["GET"])
 def index():
     generate_speech("Test")
-    scta.connect_to_arduino()
+    # scta.connect_to_arduino()
     return redirect(url_for("start"))
 
 @app.route("/WhoWantsToBeAGraduate/", methods=["GET"])

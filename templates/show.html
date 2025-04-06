@@ -101,84 +101,51 @@
     
     function createQuestionHTML(q, index) {
       return `
-      <div class="flex p-6">
-        <!-- Video Placeholder (Left Side) -->
-        <div class="w-1/2 pr-4">
-          <div class="bg-gray-100 aspect-video flex items-center justify-center rounded-lg border-2 border-baby-blue">
-            <span class="text-gray-400">Video Feed</span>
-          </div>
-        </div>
-        
-        <!-- Question Content (Right Side) -->
-        <div class="w-1/2 pl-4">
-          <div class="flex justify-between items-center mb-5">
-            <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
-            <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
-          </div>
-          
-          <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
-          
-          <!-- Hidden Interaction Elements -->
-          <div>
-            <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
-            <div class="flex items-center gap-2.5 my-5">
-              <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
-                Record Answer
-              </button>
-              <button id="stop-btn" class="px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
-                Stop
-              </button>
-              <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
-            </div>
-            <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
-              ${userAnswers[index] || ""}
-            </div>
-            <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
-              Check Answer
-            </button>
-          </div>
-          
-          <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
-          <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
-            Next Question
-          </button>
-        </div>
-      </div>
-      
-      <!-- Question Content (Right Side) -->
-      <div class="w-1/2 pl-4">
-        <div class="flex justify-between items-center mb-5">
-          <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
-          <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
-        </div>
-        
-        <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
-        
-          <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
-          <div class="flex items-center gap-2.5 my-5">
-            <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
-              Record Answer
-            </button>
-            <button id="stop-btn" class="px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
-              Stop
-            </button>
-            <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
-          </div>
-          <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
-            ${userAnswers[index] || ""}
-          </div>
-          <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
-            Check Answer
-          </button>
-        
-        <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
-        <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
-          Next Question
-        </button>
-      </div>
+<div class="p-6">
+    <!-- Video Playback Button (Only shown when video exists) -->
+    ${q.video ? `
+    <div class="mb-6 text-center">
+      <button id="play-video-btn" class="px-5 py-3 bg-baby-blue text-white rounded-lg hover:bg-baby-blue-dark transition-colors">
+        <i class="fas fa-play mr-2"></i> Play Video
+      </button>
     </div>
-    `;
-    }
+    ` : ''}
+    
+    <!-- Question Content -->
+    <div class="flex justify-between items-center mb-5", id="question-box">
+      <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
+      <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
+      <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
+    </div>
+    
+    
+    <!-- Hidden Interaction Elements -->
+    <div>
+      <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
+      <div class="flex items-center gap-2.5 my-5">
+        <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
+          Record Answer
+        </button>
+        <button id="stop-btn" class="px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
+          Stop
+        </button>
+        <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
+      </div>
+      <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
+        ${userAnswers[index] || ""}
+      </div>
+      <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
+        Check Answer
+      </button>
+    </div>
+    
+    <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
+    <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
+      Next Question
+    </button>
+  </div>
+  `;
+}
     
     function showCurrentQuestion() {
       if (questions.length === 0) return;
@@ -369,6 +336,7 @@
           } else {
             gradeStatus.textContent = "Error grading answer.";
           }
+
         } catch (error) {
           gradeStatus.textContent = "Error: " + error.message;
         }
@@ -471,6 +439,34 @@
         console.error("Error fetching status:", error);
       }
     }, 3000);
+  // Add these variables to your existing script
+  let videoPlayer = null;
+  let isVideoPlaying = false;
+
+  // Add this function to your existing script
+  function replaceQuestionWithVideo(name) {
+    const appleDiv = document.getElementById("question-box");
+
+    // Hide the apple div
+    if (appleDiv) appleDiv.style.display = "none";
+
+    // Create video element
+    const video = document.createElement("video");
+    video.src = name; // Replace with your actual video source
+    video.autoplay = true;
+    video.controls = false;
+    video.muted = true; // Required for autoplay on most browsers
+    video.style.width = "100%";
+
+    // Insert video after the apple div
+    appleDiv.parentNode.insertBefore(video, appleDiv.nextSibling);
+
+    // When video ends
+    video.addEventListener("ended", () => {
+        video.remove();                  // Remove the video
+        if (appleDiv) appleDiv.style.display = "block"; // Show the div again
+    });
+}
   </script>
 </body>
 </html>

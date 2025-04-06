@@ -1,7 +1,7 @@
 import serial
 import time
 
-arduino = None  # Don't open yet
+#arduino = None  # Don't open yet
 
 def connect_to_arduino():
     global arduino
