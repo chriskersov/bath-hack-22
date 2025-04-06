@@ -1,12 +1,21 @@
 import serial
 import time
 
-# Make sure this is the correct COM port for your Arduino
-# You can check in Device Manager which COM port is assigned
-# arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
+arduino = None  # Don't open yet
+
+def connect_to_arduino():
+    global arduino
+    
+    if arduino is None or not arduino.is_open:
+        
+        arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
+        time.sleep(2)  # Give time to reset
+    else:
+        print("DIDNT WORK")
 time.sleep(2)  # Allow time for the Arduino to reset after connection
 
 def get_answer():
+    connect_to_arduino()
     arduino.reset_input_buffer()
     arduino.write(b'answer_time\n')
     # Wait for Arduino
@@ -20,16 +29,23 @@ def get_answer():
     return None
 
 def rightAnswer(player):
+    connect_to_arduino()
     arduino.reset_input_buffer()
     arduino.write(f'win,{player}\n'.encode())  # Encode properly
     # Wait a little bit for Arduino
     time.sleep(0.2)
 
 def wrongAnswer(player):
+    connect_to_arduino()
     arduino.reset_input_buffer()
     arduino.write(f'lose,{player}\n'.encode())  # Encode properly
     time.sleep(0.2)
 
+
+def close_connection():
+    global arduino
+    if arduino and arduino.is_open:
+        arduino.close()
 # For testing, let's try a simple communication test
 # print("Sending 'answer_time' command...")
 # data = get_answer()
