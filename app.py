@@ -31,15 +31,11 @@ END_PAGE = "win.html"
 DEFAULT_QUESTIONS = 5
 
 IMAGES = [
-    "images/Wordle.png",
-    "images/Wordle.png",
-    "images/Wordle.png"
+    "images/Fabio.png"
 ]
 
 OPTIONS = [
     "Fabio",
-    "Guy A",
-    "IDK"
 ]
 
 BACKGROUND = "images/background.jpg"
@@ -161,6 +157,8 @@ def api_grade():
     #     subprompt = "Be careful not to hint too much as to reveal the answer"
     # else:
     #     subprompt = "Make sure to reveal what the answer was."
+
+    subprompt = ""
 
     prompt = f"""
     You are an AI quiz grader.
@@ -314,8 +312,10 @@ def showtime():
     # Reset processed text to ensure new questions are generated
     global processed_text
     processed_text = ""
+
+    quips=[url_for("static", filename=f"video/quips/fabio-{i}.mp4") for i in range(1, 21)]
     
-    return render_template("show.html", background=BACKGROUND)
+    return render_template("show.html", background=BACKGROUND, intro=url_for("static", filename="video/intro_outro/fabio_intro.mp4"), outro=url_for("static", filename="video/intro_outro/fabio_outro.mp4"), quips=quips)
 
 @app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():
