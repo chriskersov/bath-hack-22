@@ -169,7 +169,7 @@ def api_grade():
 
     Return a JSON object with the following fields:
     - correct (boolean): true if the user's answer is acceptably correct, false otherwise.
-    - feedback (string): a short natural language message to the user about their answer (praise if correct, hint if incorrect. Be careful not to hint too much as to reveal the answer).
+    - feedback (string): a short natural language message to the user about their answer (praise if correct, hint if incorrect. {subprompt}).
 
     question: {question}  
     expected_answer: {expected}  
