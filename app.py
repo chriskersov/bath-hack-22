@@ -152,6 +152,11 @@ def api_grade():
     expected = data["expected_answer"]
     user_answer = data["user_answer"]
 
+    if data["first"]:
+        subprompt = "Be careful not to hint too much as to reveal the answer"
+    else:
+        subprompt = "Make sure to reveal what the answer was."
+
     prompt = f"""
     You are an AI quiz grader.
 
@@ -164,7 +169,7 @@ def api_grade():
 
     Return a JSON object with the following fields:
     - correct (boolean): true if the user's answer is acceptably correct, false otherwise.
-    - feedback (string): a short natural language message to the user about their answer (e.g., praise, correction, or hint).
+    - feedback (string): a short natural language message to the user about their answer (praise if correct, hint if incorrect. Be careful not to hint too much as to reveal the answer).
 
     question: {question}  
     expected_answer: {expected}  

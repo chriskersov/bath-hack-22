@@ -6,7 +6,7 @@ document.getElementById("extractCaptions").addEventListener("click", async () =>
       target: { tabId: tab.id },
       files: ["content.js"]
     }, () => {
-      statusDiv.textContent = "Extraction script executed.";
+      statusDiv.textContent = "Captions extracted!";
     });
   });
   

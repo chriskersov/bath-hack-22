@@ -3,7 +3,7 @@ import time
 
 # Make sure this is the correct COM port for your Arduino
 # You can check in Device Manager which COM port is assigned
-arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
+# arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
 time.sleep(2)  # Allow time for the Arduino to reset after connection
 
 def get_answer():
