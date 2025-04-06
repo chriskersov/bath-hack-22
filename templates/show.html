@@ -95,35 +95,48 @@
     
     function createQuestionHTML(q, index) {
       return `
-      <div class="p-6 mb-5 bg-white transition-all duration-300 ease-in-out" data-index="${index}">
-        <div class="flex justify-between items-center mb-5">
-          <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
-          <p><strong>Progress:</strong> Question ${index + 1} of ${questions.length}</p>
+      <div class="flex p-6">
+        <!-- Video Placeholder (Left Side) -->
+        <div class="w-1/2 pr-4">
+          <div class="bg-gray-100 aspect-video flex items-center justify-center rounded-lg border-2 border-baby-blue">
+            <span class="text-gray-400">Video Feed</span>
+          </div>
         </div>
-        <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
-        <p><strong>Expected Answer (for testing):</strong> <span class="italic text-gray-500">${q.answer}</span></p>
-        <div class="flex items-center gap-2.5 my-5">
-          <button class="px-5 py-3 text-base font-medium bg-pink-300 text-white border-none rounded-lg cursor-pointer transition-all duration-200 shadow-md hover:bg-pink-400 hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none" id="record-btn" ${userAnswers[index] ? "disabled" : ""}>
-            <svg class="inline-block mr-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="6"></circle>
-            </svg>
-            Record Answer
+        
+        <!-- Question Content (Right Side) -->
+        <div class="w-1/2 pl-4">
+          <div class="flex justify-between items-center mb-5">
+            <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
+            <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
+          </div>
+          
+          <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
+          
+          <!-- Hidden Interaction Elements -->
+          <div class="hidden">
+            <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
+            <div class="flex items-center gap-2.5 my-5">
+              <button id="record-btn" class="px-5 py-3 text-base font-medium bg-pink-300 text-white rounded-lg">
+                Record Answer
+              </button>
+              <button id="stop-btn" class="px-5 py-3 text-base font-medium bg-pink-200 text-white rounded-lg" disabled>
+                Stop
+              </button>
+              <span id="record-status" class="ml-2.5 italic text-gray-500"></span>
+            </div>
+            <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">
+              ${userAnswers[index] || ""}
+            </div>
+            <button id="grade-btn" class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white rounded-lg">
+              Check Answer
+            </button>
+          </div>
+          
+          <p class="mt-4 italic text-gray-500" id="grade-status">${grades[index] || ""}</p>
+          <button id="next-btn" class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white rounded-lg">
+            Next Question
           </button>
-          <button class="px-5 py-3 text-base font-medium bg-pink-200 text-white border-none rounded-lg cursor-pointer transition-all duration-200 shadow-md hover:bg-pink-300 hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none" id="stop-btn" disabled>
-            <svg class="inline-block mr-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="6" y="6" width="12" height="12"></rect>
-            </svg>
-            Stop
-          </button>
-          <span class="ml-2.5 italic text-gray-500" id="record-status"></span>
         </div>
-        <p><strong>Your Answer:</strong></p>
-        <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">${userAnswers[index] || ""}</div>
-        <div class="mt-4">
-          <button class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white border-none rounded-lg cursor-pointer transition-all duration-200 shadow-md hover:bg-blue-600 hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
-          <p class="ml-2.5 italic text-gray-500 mt-2" id="grade-status"></p>
-        </div>
-        <button class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white border-none rounded-lg cursor-pointer transition-all duration-200 shadow-md hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0" id="next-btn">Next Question</button>
       </div>
       `;
     }
@@ -145,6 +158,28 @@
       setTimeout(() => {
         playTTS(questionText);
       }, 300);
+
+      getPlayer()
+
+    }
+
+    async function getPlayer() {
+      player = await fetch("/WhoWantsToBeAGraduate/api/arduino");
+
+      if (player) {
+        document.getElementById("record-btn").click();
+
+        // WAIT FOR CONCLUSION
+        // EVALUATE ANSWER
+        // AWARD POINTS OR SWITCH TO OTHER USER AND REPEAT
+
+        if (player == 1) {
+          // More logic
+        } else {
+          // WEEP
+        }
+
+      }
     }
     
     function initEventListeners() {

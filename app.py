@@ -4,6 +4,7 @@ import tempfile
 import os
 import json
 import re
+import time
 from services.voice_read import generate_speech
 
 app = Flask(__name__)
@@ -211,7 +212,8 @@ def tts():
     
 @app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET"])
 def activate_arduino():
-    pass
+    time.sleep(3)
+    return "hello"
 
 # Make the start page the default route
 @app.route("/", methods=["GET"])
