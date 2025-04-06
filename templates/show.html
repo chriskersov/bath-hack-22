@@ -103,14 +103,13 @@
       return `
 <div class="p-6">
 
-    <video class="flex justify-between items-center mb-5", autoplay controls onended="this.style.display='none'">
-      <source src="{{ intro }}" type="video/mp4">
+    <video class="flex justify-between items-center mb-5" autoplay controls onended="endVideo(this)">
+      <source src="${video}" type="video/mp4">
     </video>
     
     <!-- Question Content -->
-    <div class="flex justify-between items-center mb-5" hidden id="question-box">
+    <div class="flex justify-between items-center mb-5 hidden" id="question-box">
       <h2 class="text-lg font-semibold">Question ${index + 1}</h2>
-      <p class="text-sm text-gray-500">${index + 1}/${questions.length}</p>
       <p class="text-xl mb-6 font-medium text-gray-800">${q.question}</p>
       <p><strong>Expected Answer:</strong> <span class="italic text-gray-500">${q.answer}</span></p>
     </div>
@@ -142,11 +141,18 @@
   </div>
   `;
 }
-    
     function showCurrentQuestion() {
       if (questions.length === 0) return;
       const container = document.getElementById("question-container");
-      container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex);
+      var quips = {{ quips | tojson }};
+
+      if (currentQuestionIndex == 0) {
+        video = "{{ intro }}";
+      } else {
+        var randomIndex = Math.floor(Math.random() * quips.length);
+        video = quips[randomIndex];
+      }
+      container.innerHTML = createQuestionHTML(questions[currentQuestionIndex], currentQuestionIndex, video);
       
       // Update progress bar
       const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
@@ -387,7 +393,8 @@
         `;
       });
       
-      summaryContent.innerHTML = summaryHTML;
+      let endscene = '<video class="flex justify-between items-center mb-5" autoplay controls onended="this.style.display="none""><source src="{{ outro }}" type="video/mp4"></video>'
+      summaryContent.innerHTML = endscene + summaryHTML;
       
       const totalQuestions = questions.length;
       const score = Math.round((correctCount / totalQuestions) * 100);
@@ -434,7 +441,7 @@
     }, 3000);
     function endVideo(self) {
       self.style.display = "none"
-      document.getElementById("question-box").hidden = "false"
+      document.getElementById("question-box").style.display = "block"
     }
   </script>
 </body>
