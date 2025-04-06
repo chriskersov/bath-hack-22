@@ -25,20 +25,25 @@ def rightAnswer(player):
     time.sleep(0.2)
 
 def wrongAnswer(player):
+    player = int(player)
     player = (player + 1) % 2
     arduino.reset_input_buffer()
     arduino.write(f'lose,{player}\n'.encode())  # Encode properly
     time.sleep(0.2)
 
-# # For testing, let's try a simple communication test
+# For testing, let's try a simple communication test
 # print("Sending 'answer_time' command...")
 # data = get_answer()
 # print(f"Received: {data}")
 
-# time.sleep(2)
-# print("Sending 'win,0' command...")
-# rightAnswer(0)
+# # time.sleep(2)
+# # print("Sending 'win,0' command...")
+# # rightAnswer(data)
 
-# time.sleep(2)
-# print("Sending 'lose,1' command...")
-# wrongAnswer(0)
+# # time.sleep(2)
+# # print("Sending 'lose,1' command...")
+# # wrongAnswer(data)
+# # data = (int(data) + 1) % 2
+# # time.sleep(2)
+# # print("Sending 'lose,1' command...")
+# wrongAnswer(data)
