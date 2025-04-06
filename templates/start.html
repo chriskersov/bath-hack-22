@@ -69,11 +69,33 @@
   </div>
 
   <script>
-    let count = {{ questions }}
+    let count = {{ questions }};
+    const minCount = 1;
+    const maxCount = 25;
+
     function updateCount(num) {
-      count += num
-      document.getElementById('counter').textContent = count;
-      document.getElementById('counter_value').value = count;
+
+      let newCount = count + num;
+      
+      if (newCount < minCount) {
+        newCount = minCount;
+      } else if (newCount > maxCount) {
+        newCount = maxCount;
+      }
+      
+      if (newCount !== count) {
+        count = newCount;
+        document.getElementById('counter').textContent = count;
+        document.getElementById('counter_value').value = count;
+      }
+      
+      if (count === minCount || count === maxCount) {
+        const counterElement = document.getElementById('counter');
+        counterElement.classList.add('animate-pulse', 'text-baby-blue-dark');
+        setTimeout(() => {
+          counterElement.classList.remove('animate-pulse', 'text-baby-blue-dark');
+        }, 500);
+      }
     }
 
     function selectImage(element, optionName) {
@@ -83,6 +105,14 @@
       element.classList.add('border-baby-blue', 'bg-baby-blue-light');
       document.getElementById('selected_option').value = optionName;
     }
+
+    // Form validation
+    document.getElementById('option-form').addEventListener('submit', function(e) {
+      if (count < minCount || count > maxCount) {
+        e.preventDefault();
+        alert(`Please select between ${minCount} and ${maxCount} questions`);
+      }
+    });
   </script>
 </body>
 </html>
