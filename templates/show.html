@@ -121,7 +121,7 @@
         <div class="bg-baby-blue-light p-4 rounded-lg whitespace-pre-wrap my-4 text-gray-800" id="user-answer">${userAnswers[index] || ""}</div>
         <div class="mt-4">
           <button class="px-5 py-3 text-base font-medium bg-baby-blue-dark text-white border-none rounded-lg cursor-pointer transition-all duration-200 shadow-md hover:bg-blue-600 hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none" id="grade-btn" ${userAnswers[index] ? "" : "disabled"}>Check Answer</button>
-          <p class="ml-2.5 italic text-gray-500 mt-2" id="grade-status">${grades[index] || ""}</p>
+          <p class="ml-2.5 italic text-gray-500 mt-2" id="grade-status"></p>
         </div>
         <button class="hidden mt-5 w-full px-5 py-3 text-base font-medium bg-success text-white border-none rounded-lg cursor-pointer transition-all duration-200 shadow-md hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0" id="next-btn">Next Question</button>
       </div>
@@ -252,9 +252,12 @@
           currentAudio = null;
         }
         
+        console.log(typeof questions)
+        console.log(questions[currentQuestionIndex])
         const questionText = questions[currentQuestionIndex].question;
         const expectedAnswer = questions[currentQuestionIndex].answer;
         const userAnswer = userAnswerEl.textContent;
+        console.log(expectedAnswer)
         gradeStatus.textContent = "Grading answer...";
         gradeBtn.disabled = true;
         
@@ -268,10 +271,11 @@
               user_answer: userAnswer
             })
           });
-          const gradeResult = await gradeResponse.json();
+          const gradeResultPre = await gradeResponse.json();
+          const gradeResult = JSON.parse(gradeResultPre)
           if (gradeResult.feedback) {
             const gradeText = gradeResult.feedback;
-            grades[currentQuestionIndex] = gradeText;
+            grades[currentQuestionIndex] = gradeResult.correct;
             
             if (!gradeResult.correct) {
               gradeStatus.innerHTML = `<span class="font-semibold text-error">✗</span> ${gradeText}`;
@@ -327,13 +331,8 @@
       let incorrectCount = 0;
       
       questions.forEach((q, index) => {
-        let gradeText = grades[index] || "";
-        let gradeLower = gradeText.toLowerCase().trim();
-        
-        const hasIncorrect = /\bincorrect\b/i.test(gradeLower);
-        const hasCorrect = /\bcorrect\b/i.test(gradeLower);
-        
-        let isCorrect = !hasIncorrect && hasCorrect;
+
+        let isCorrect = grades[index]
         
         if (isCorrect) {
           correctCount++;
@@ -382,6 +381,7 @@
         const response = await fetch("/api/status");
         if (response.ok) {
           const data = await response.json();
+          console.log(data)
           if (data.processed_text && data.processed_text.trim() !== "") {
             try {
               questions = JSON.parse(data.processed_text);

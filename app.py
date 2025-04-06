@@ -3,6 +3,7 @@ import openai
 import tempfile
 import os
 import json
+import re
 from services.voice_read import generate_speech
 
 app = Flask(__name__)
@@ -45,6 +46,11 @@ BACKGROUND = "images/background.jpg"
 openai.api_key = "qTPADyqTfVaamwCEIsRksDAZIhqdvvDweogu8p242iw6WZE0sk8C05jE2w3yGtIAbX88swUBsD2GHLaCdnVC14Dy2eYFluldpnK1Pvz8pyjZMXfdwPHcz6MD9HTySKSd"
 openai.api_base = "https://hack.funandprofit.ai/api/providers/openai/v1"
 
+def clean_json_response(text):
+    # Remove triple backticks and language hints if present
+    cleaned = re.sub(r"```(json)?\n?", "", text).strip("` \n")
+    return cleaned
+
 @app.route("/api/captions", methods=["POST"])
 def api_captions():
     global captions_text, processed_text, num_questions_to_generate
@@ -71,7 +77,7 @@ def api_captions():
     - question (string): the generated question.
     - answer (string): the correct short answer.
 
-    Only return the raw JSON — no additional text, formatting, or explanations.
+    Ensure the json is properly formatted.
     """
 
     messages = [
@@ -84,7 +90,7 @@ def api_captions():
             model="gpt-3.5-turbo",  # or "gpt-3.5-turbo-16k" if needed
             messages=messages
         )
-        processed_text = completion.choices[0].message.content
+        processed_text = clean_json_response(completion.choices[0].message.content)
     except Exception as e:
         processed_text = f"Error processing captions: {e}"
         print(processed_text)
@@ -135,33 +141,44 @@ def api_transcribe():
 @app.route("/api/grade", methods=["POST"])
 def api_grade():
     data = request.get_json()
+    print(data)
     if not data or "question" not in data or "expected_answer" not in data or "user_answer" not in data:
+        print("BALLS")
         return jsonify({"error": "Missing parameters"}), 400
     
     question = data["question"]
     expected = data["expected_answer"]
     user_answer = data["user_answer"]
 
+    prompt = f"""
+    You are an AI quiz grader.
+
+    You will be given:
+    - A question from a quiz.
+    - The correct answer expected.
+    - A user's submitted answer.
+
+    Your task is to evaluate the user's input and determine whether it is acceptably correct. Be reasonably lenient with paraphrasing and wording differences, as long as the core meaning matches the expected answer.
+
+    Return a JSON object with the following fields:
+    - correct (boolean): true if the user's answer is acceptably correct, false otherwise.
+    - feedback (string): a short natural language message to the user about their answer (e.g., praise, correction, or hint).
+
+    question: {question}  
+    expected_answer: {expected}  
+    user_input: {user_answer}  
+
+    Ensure the json is properly formatted.
+    """
+
     try:
         completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[
-        {"role": "user", "content": 
-        f"""
-        Compare the user_input to the expected_answer.
-        Return a JSON object with the following fields:
-        1. correct (boolean): true if the user_input is acceptably correct, false otherwise.
-        2. feedback (string): a short natural language message to the user about their answer.
-
-        question: {question}
-        expected_answer: {expected}
-        user_input: {user_answer}
-        Be reasonably lenient with paraphrasing and wording differences as long as the core meaning is the same.
-        """
-        }])
-        content = completion.choices[0].message.content
+        messages=[{"role": "user", "content": prompt}])
+        content = clean_json_response(completion.choices[0].message.content)
         print(content)
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
     
     return jsonify(content), 200
