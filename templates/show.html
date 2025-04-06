@@ -163,12 +163,6 @@
       
       // Auto-play the question audio as soon as it is loaded.
       const questionText = "Question " + (currentQuestionIndex + 1) + ": " + questions[currentQuestionIndex].question;
-      setTimeout(() => {
-        playTTS(questionText);
-      }, 300);
-
-      getPlayer()
-
     }
 
     async function getPlayer() {
