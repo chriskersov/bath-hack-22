@@ -39,6 +39,8 @@ OPTIONS = [
     "IDK"
 ]
 
+BACKGROUND = "images/background.jpg"
+
 # Hardcoded API key and custom base URL (per hack.funandprofit.ai)
 openai.api_key = "qTPADyqTfVaamwCEIsRksDAZIhqdvvDweogu8p242iw6WZE0sk8C05jE2w3yGtIAbX88swUBsD2GHLaCdnVC14Dy2eYFluldpnK1Pvz8pyjZMXfdwPHcz6MD9HTySKSd"
 openai.api_base = "https://hack.funandprofit.ai/api/providers/openai/v1"
@@ -51,6 +53,7 @@ def api_captions():
         return jsonify({"error": "No captions provided"}), 400
 
     captions_text = data["captions"]
+    print(num_questions_to_generate)
 
     # Use the global num_questions_to_generate
     instructions = (
@@ -166,7 +169,7 @@ def index():
 
 @app.route("/WhoWantsToBeAGraduate/Prepare", methods=["GET"])
 def start():
-    return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS)
+    return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS, background=BACKGROUND)
 
 @app.route("/WhoWantsToBeAGraduate/Gameshow", methods=["POST"])
 def showtime():
@@ -186,7 +189,7 @@ def showtime():
     global processed_text
     processed_text = ""
     
-    return render_template("show.html")
+    return render_template("show.html", background=BACKGROUND)
 
 @app.route("/tts", methods=["GET"])
 def tts():
