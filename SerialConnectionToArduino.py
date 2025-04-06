@@ -10,13 +10,14 @@ def get_answer():
     arduino.reset_input_buffer()
     arduino.write(b'answer_time\n')
     # Wait for Arduino
-    time.sleep(3)
-    # Read response
-    if arduino.in_waiting > 0:
-        data = arduino.readline().decode().strip()
-        return data
-    else:
-        return "error, no response from Arduino"
+    for i in range (0,30):
+        time.sleep(0.3)
+        # Read response
+        if arduino.in_waiting > 0:
+            data = arduino.readline().decode().strip()
+            return data
+        else:
+            return "error, no response from Arduino"
 
 def rightAnswer(player):
     arduino.reset_input_buffer()
