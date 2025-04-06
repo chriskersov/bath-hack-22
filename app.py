@@ -134,7 +134,7 @@ def api_grade():
         f"User Answer: {user_answer}\n\n"
         "You are grading the user's answer against the expected answer. "
         "Be lenient - they don't need to match exactly, just demonstrate understanding of the concept. "
-        "Start your response with EXACTLY ONE of these keywords: 'CORRECT:' or 'INCORRECT: if it is correct or incorrect nothing else' "
+        "Start your response with EXACTLY ONE of these keywords: 'CORRECT:' or 'INCORRECT followed by the tiniest and most concise correct answer dont use uncesseary words' "
         # "followed by a brief explanation. Make sure your response starts with one of these exact keywords."
     )
     
