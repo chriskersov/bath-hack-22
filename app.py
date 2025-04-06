@@ -238,7 +238,6 @@ def activate_arduino():
 @app.route("/", methods=["GET"])
 def index():
     generate_speech("Test")
-    scta.connect_to_arduino()
     return redirect(url_for("start"))
 
 @app.route("/WhoWantsToBeAGraduate/", methods=["GET"])
