@@ -63,7 +63,7 @@
           currentAudio = null;
         }
         
-        const response = await fetch("/tts?text=" + encodeURIComponent(text));
+        const response = await fetch("/WhoWantsToBeAGraduate/api/tts?text=" + encodeURIComponent(text));
         const data = await response.json();
         if (data.status === "success" && data.filename) {
           const audioElem = document.createElement("audio");
@@ -218,7 +218,7 @@
             const formData = new FormData();
             formData.append("audio", audioBlob, `recording.${extension}`);
             try {
-              const response = await fetch("/api/transcribe", { method: "POST", body: formData });
+              const response = await fetch("/WhoWantsToBeAGraduate/api/transcribe", { method: "POST", body: formData });
               const result = await response.json();
               if (result.audio_transcription) {
                 userAnswerEl.textContent = result.audio_transcription;
@@ -252,17 +252,14 @@
           currentAudio = null;
         }
         
-        console.log(typeof questions)
-        console.log(questions[currentQuestionIndex])
         const questionText = questions[currentQuestionIndex].question;
         const expectedAnswer = questions[currentQuestionIndex].answer;
         const userAnswer = userAnswerEl.textContent;
-        console.log(expectedAnswer)
         gradeStatus.textContent = "Grading answer...";
         gradeBtn.disabled = true;
         
         try {
-          const gradeResponse = await fetch("/api/grade", {
+          const gradeResponse = await fetch("/WhoWantsToBeAGraduate/api/grade", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -378,10 +375,9 @@
     // Poll for status updates every 3 seconds until questions are loaded
     let statusInterval = setInterval(async () => {
       try {
-        const response = await fetch("/api/status");
+        const response = await fetch("/WhoWantsToBeAGraduate/api/status");
         if (response.ok) {
           const data = await response.json();
-          console.log(data)
           if (data.processed_text && data.processed_text.trim() !== "") {
             try {
               questions = JSON.parse(data.processed_text);

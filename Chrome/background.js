@@ -1,7 +1,7 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "CAPTIONS_EXTRACTED") {
       // Send the extracted captions to your local web app
-      fetch("http://127.0.0.1:8080/api/captions", {
+      fetch("http://127.0.0.1:8080/WhoWantsToBeAGraduate/api/captions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

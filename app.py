@@ -51,7 +51,7 @@ def clean_json_response(text):
     cleaned = re.sub(r"```(json)?\n?", "", text).strip("` \n")
     return cleaned
 
-@app.route("/api/captions", methods=["POST"])
+@app.route("/WhoWantsToBeAGraduate/api/captions", methods=["POST"])
 def api_captions():
     global captions_text, processed_text, num_questions_to_generate
     data = request.get_json()
@@ -98,7 +98,7 @@ def api_captions():
 
     return jsonify({"status": "success", "processed_text": processed_text}), 200
 
-@app.route("/api/transcribe", methods=["POST"])
+@app.route("/WhoWantsToBeAGraduate/api/transcribe", methods=["POST"])
 def api_transcribe():
     global audio_transcription
     
@@ -138,7 +138,7 @@ def api_transcribe():
             "hint": "Ensure file is in proper format and contains audible speech"
         }), 500
 
-@app.route("/api/grade", methods=["POST"])
+@app.route("/WhoWantsToBeAGraduate/api/grade", methods=["POST"])
 def api_grade():
     data = request.get_json()
     print(data)
@@ -183,7 +183,7 @@ def api_grade():
     
     return jsonify(content), 200
 
-@app.route("/api/status", methods=["GET"])
+@app.route("/WhoWantsToBeAGraduate/api/status", methods=["GET"])
 def api_status():
     global presenter_name
     return jsonify({
@@ -192,13 +192,34 @@ def api_status():
         "presenter": presenter_name
     })
 
+@app.route("/WhoWantsToBeAGraduate/api/tts", methods=["GET"])
+def tts():
+    text = request.args.get("text", "")
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+    
+    # Generate a unique filename using timestamp or UUID
+    import uuid
+    unique_id = str(uuid.uuid4())
+    output_filename = f"static/tts_output_{unique_id}.mp3"
+    
+    success = generate_speech(text, output_filename=output_filename)
+    if success:
+        return jsonify({"status": "success", "filename": output_filename}), 200
+    else:
+        return jsonify({"error": "Text-to-speech conversion failed"}), 500
+    
+@app.route("/WhoWantsToBeAGraduate/api/arduino", methods=["GET"])
+def activate_arduino():
+    pass
+
 # Make the start page the default route
 @app.route("/", methods=["GET"])
 def index():
     generate_speech("Test")
     return redirect(url_for("start"))
 
-@app.route("/WhoWantsToBeAGraduate/Prepare", methods=["GET"])
+@app.route("/WhoWantsToBeAGraduate/", methods=["GET"])
 def start():
     return render_template(START_PAGE, options=list(zip(OPTIONS, IMAGES)), questions=DEFAULT_QUESTIONS, background=BACKGROUND)
 
@@ -221,27 +242,6 @@ def showtime():
     processed_text = ""
     
     return render_template("show.html", background=BACKGROUND)
-
-@app.route("/tts", methods=["GET"])
-def tts():
-    text = request.args.get("text", "")
-    if not text:
-        return jsonify({"error": "No text provided"}), 400
-    
-    # Generate a unique filename using timestamp or UUID
-    import uuid
-    unique_id = str(uuid.uuid4())
-    output_filename = f"static/tts_output_{unique_id}.mp3"
-    
-    success = generate_speech(text, output_filename=output_filename)
-    if success:
-        return jsonify({"status": "success", "filename": output_filename}), 200
-    else:
-        return jsonify({"error": "Text-to-speech conversion failed"}), 500
-    
-@app.route("/api/arduino", methods=["GET"])
-def activate_arduino():
-    pass
 
 @app.route("/WhoWantsToBeAGraduate/Finale", methods=["GET"])
 def victory():
