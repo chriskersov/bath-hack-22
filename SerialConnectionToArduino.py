@@ -10,6 +10,7 @@ def connect_to_arduino():
         
         arduino = serial.Serial(port='COM3', baudrate=9600, timeout=1)
         time.sleep(2)  # Give time to reset
+        print("inside")
     else:
         print("DIDNT WORK")
 time.sleep(2)  # Allow time for the Arduino to reset after connection

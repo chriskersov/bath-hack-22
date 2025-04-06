@@ -152,10 +152,10 @@ def api_grade():
     expected = data["expected_answer"]
     user_answer = data["user_answer"]
 
-    if data["first"]:
-        subprompt = "Be careful not to hint too much as to reveal the answer"
-    else:
-        subprompt = "Make sure to reveal what the answer was."
+    # if data["first"]:
+    #     subprompt = "Be careful not to hint too much as to reveal the answer"
+    # else:
+    #     subprompt = "Make sure to reveal what the answer was."
 
     prompt = f"""
     You are an AI quiz grader.
@@ -169,7 +169,7 @@ def api_grade():
 
     Return a JSON object with the following fields:
     - correct (boolean): true if the user's answer is acceptably correct, false otherwise.
-    - feedback (string): a short natural language message to the user about their answer (praise if correct, hint if incorrect. {subprompt}).
+    - feedback (string): a short natural language message to the user about their answer 
 
     question: {question}  
     expected_answer: {expected}  
@@ -237,7 +237,7 @@ def activate_arduino():
 # Make the start page the default route
 @app.route("/", methods=["GET"])
 def index():
-    generate_speech("Test")
+    #generate_speech("Test")
     scta.connect_to_arduino()
     return redirect(url_for("start"))
 
@@ -256,6 +256,8 @@ def showtime():
     # Store in session if needed for persistence
     session['num_questions'] = num_questions_to_generate
     session['presenter'] = presenter_name
+
+    print(presenter_name)
     
     print(f"Starting game with {num_questions_to_generate} questions and presenter: {presenter_name}")
     
